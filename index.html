@@ -38,7 +38,13 @@ h1,h2,h3,.serif-display{font-family:'Cormorant Garamond', Georgia, serif;}
 /* ---------- estructura ---------- */
 .wrap{max-width:1080px; margin:0 auto; padding:28px 20px 80px;}
 
-.marca{text-align:center; margin-bottom:22px;}
+.marca{text-align:center; margin-bottom:22px; position:relative;}
+.marca-blason-bg{
+  position:absolute; top:-56px; left:50%; transform:translateX(-50%);
+  width:230px; opacity:0.09; pointer-events:none; z-index:0;
+}
+.marca-blason-bg svg{width:100%; height:auto; display:block;}
+.marca > *:not(.marca-blason-bg){position:relative; z-index:1;}
 .marca .sello{
   width:46px; height:46px; border-radius:50%;
   background:var(--rojo); border:2px solid var(--dorado);
@@ -193,8 +199,17 @@ th.num{text-align:right;}
 .vacio{text-align:center; color:var(--hueso-muted); padding:30px 10px; font-style:italic;}
 
 .grupo-insumos{margin-bottom:22px;}
-.grupo-insumos h4{color:var(--dorado); font-size:16px; letter-spacing:1px; text-transform:uppercase; margin:18px 0 8px; border-bottom:1px solid var(--linea); padding-bottom:6px;}
-.grupo-insumos h5{color:var(--hueso-muted); font-size:13px; letter-spacing:1px; margin:10px 0 6px;}
+.grupo-insumos h4{color:var(--dorado); font-size:16px; letter-spacing:1px; text-transform:uppercase; margin:18px 0 2px; border-bottom:1px solid var(--linea); padding-bottom:6px;}
+.grupo-insumos h5{color:var(--hueso-muted); font-size:13px; letter-spacing:1px; margin:10px 0 2px;}
+.cat-clickable{cursor:pointer;}
+.cat-editar-icono{opacity:.4; font-size:12px;}
+.cat-clickable:hover .cat-editar-icono{opacity:1; color:var(--dorado-brillante);}
+.cat-descripcion-preview{
+  font-size:12px; font-style:italic; color:var(--hueso-muted); cursor:pointer;
+  margin:0 0 10px; padding-bottom:6px; line-height:1.5;
+}
+.cat-descripcion-preview.subcat{font-size:11px; margin-left:6px; opacity:.85;}
+.cat-descripcion-preview:hover{color:var(--dorado-brillante);}
 .fila-insumo{display:flex; justify-content:space-between; align-items:center; padding:8px 10px; border-bottom:1px solid var(--linea); font-size:14px;}
 .fila-insumo:hover{background:rgba(201,169,97,0.04);}
 .fila-insumo .nombre{color:var(--hueso);}
@@ -265,6 +280,32 @@ td.num.error{color:var(--rojo-claro);}
 <div class="wrap">
 
   <div class="marca">
+    <div class="marca-blason-bg" aria-hidden="true">
+      <svg viewBox="0 0 240 300" xmlns="http://www.w3.org/2000/svg">
+        <!-- corona -->
+        <g fill="none" stroke="var(--dorado)" stroke-width="2.5">
+          <path d="M75,38 L80,10 L100,26 L120,4 L140,26 L160,10 L165,38 Z" />
+          <circle cx="80" cy="10" r="4" fill="var(--dorado)" stroke="none" />
+          <circle cx="120" cy="4" r="4.5" fill="var(--dorado)" stroke="none" />
+          <circle cx="160" cy="10" r="4" fill="var(--dorado)" stroke="none" />
+          <rect x="73" y="38" width="94" height="10" rx="2" />
+        </g>
+        <!-- escudo -->
+        <path d="M50,55 L190,55 L190,150 C190,215 155,255 120,278 C85,255 50,215 50,150 Z"
+              fill="var(--rojo)" stroke="var(--dorado)" stroke-width="3" />
+        <!-- linea de particion horizontal -->
+        <line x1="50" y1="165" x2="190" y2="165" stroke="var(--dorado)" stroke-width="2" opacity="0.7" />
+        <!-- espada diagonal -->
+        <g stroke="var(--dorado)" stroke-width="3" fill="var(--dorado)">
+          <line x1="72" y1="78" x2="168" y2="238" stroke-width="5" />
+          <line x1="88" y1="100" x2="70" y2="112" stroke-width="5" />
+          <line x1="98" y1="115" x2="80" y2="127" stroke-width="5" />
+          <circle cx="168" cy="238" r="7" stroke="none" />
+        </g>
+        <!-- ornamento inferior -->
+        <path d="M90,270 Q120,290 150,270" fill="none" stroke="var(--dorado)" stroke-width="1.5" opacity="0.6" />
+      </svg>
+    </div>
     <div class="sello">A</div>
     <h1>Armitano</h1>
     <div class="lema">Calidad · Prudencia · Vínculo</div>
@@ -285,6 +326,7 @@ td.num.error{color:var(--rojo-claro);}
       <button class="tab-btn" data-vista="insumos" onclick="cambiarTab('insumos')">Insumos</button>
       <button class="tab-btn" data-vista="costos" onclick="cambiarTab('costos')">Centro de costos</button>
       <button class="tab-btn" data-vista="stock" onclick="cambiarTab('stock')">Stock</button>
+      <button class="tab-btn" data-vista="marca" onclick="cambiarTab('marca')">Marca</button>
       <button class="tab-btn" style="opacity:.6;" onclick="abrirConfigManual()" title="Reconfigurar conexión">⚙</button>
     </div>
 
@@ -344,6 +386,31 @@ td.num.error{color:var(--rojo-claro);}
         <div id="stock-contenido"><div class="vacio">Cargando…</div></div>
       </div>
     </div>
+
+    <!-- ===================== VISTA MARCA ===================== -->
+    <div id="vista-marca" class="vista">
+      <div class="panel">
+        <div class="panel-header">
+          <div>
+            <h2>Marca</h2>
+            <p class="subtexto">Identidad, tono y filosofía de ARMITANO — el espacio conceptual, separado de lo operativo.</p>
+          </div>
+        </div>
+        <label>Descripción general de marca</label>
+        <textarea id="marca-descripcion-general" style="min-height:130px;" placeholder="Filosofía general, qué es y qué no es ARMITANO…"></textarea>
+        <div style="text-align:right;"><button class="btn btn-sm" onclick="guardarMarcaGeneral()">Guardar descripción general</button></div>
+      </div>
+      <div class="panel">
+        <div class="panel-header">
+          <div>
+            <h2>Secciones</h2>
+            <p class="subtexto">Posicionamiento, tono de voz, historia del blasón, público objetivo — títulos libres, desarrollo extenso adentro.</p>
+          </div>
+          <button class="btn btn-primario" onclick="abrirModalMarcaSeccion()">+ Nueva sección</button>
+        </div>
+        <div id="grid-marca-secciones" class="grid-recetas"><div class="vacio">Cargando…</div></div>
+      </div>
+    </div>
   </div>
 
 </div>
@@ -397,7 +464,17 @@ td.num.error{color:var(--rojo-claro);}
       <h3 id="detalle-nombre">—</h3>
       <button class="btn-fantasma" onclick="cerrarModal('modal-detalle')" style="font-size:20px;">×</button>
     </div>
-    <div id="detalle-meta" class="subtexto" style="margin-bottom:14px;"></div>
+    <div id="detalle-meta" class="subtexto" style="margin-bottom:6px;"></div>
+    <div style="display:flex; align-items:center; gap:10px; margin-bottom:14px;">
+      <label style="margin:0;">Estado:</label>
+      <select id="detalle-estado-selector" onchange="cambiarEstadoDirecto()" style="margin:0; width:auto; min-width:170px;">
+        <option>Teórica</option>
+        <option>En maceración</option>
+        <option>Embotellada</option>
+        <option>Reposando</option>
+        <option>Evaluada</option>
+      </select>
+    </div>
     <div id="detalle-notas" class="subtexto" style="margin-bottom:18px;"></div>
 
     <div class="subtabs">
@@ -511,6 +588,40 @@ td.num.error{color:var(--rojo-claro);}
   </div>
 </div>
 
+<!-- ===================== MODAL SECCIÓN DE MARCA ===================== -->
+<div class="overlay" id="modal-marca-seccion">
+  <div class="modal" style="max-width:680px;">
+    <h3 id="titulo-modal-marca-seccion">Nueva sección</h3>
+    <input type="hidden" id="marca-seccion-id">
+    <div class="campo-fila">
+      <div><label>Título</label><input type="text" id="marca-seccion-titulo" placeholder="Ej. Posicionamiento"></div>
+      <div><label>Orden</label><input type="number" id="marca-seccion-orden" placeholder="1"></div>
+    </div>
+    <label>Contenido</label>
+    <textarea id="marca-seccion-contenido" style="min-height:260px;" placeholder="Desarrollo extenso…"></textarea>
+    <div class="modal-acciones">
+      <button class="btn" onclick="cerrarModal('modal-marca-seccion')">Cancelar</button>
+      <button class="btn-fantasma" id="btn-borrar-marca-seccion" style="display:none;" onclick="borrarMarcaSeccionActual()">Eliminar</button>
+      <button class="btn btn-primario" onclick="guardarMarcaSeccion()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== MODAL DESCRIPCIÓN DE CATEGORÍA ===================== -->
+<div class="overlay" id="modal-categoria-info">
+  <div class="modal" style="max-width:640px;">
+    <h3 id="titulo-modal-categoria">Categoría</h3>
+    <input type="hidden" id="categoria-clave">
+    <input type="hidden" id="categoria-tipo">
+    <label>Apreciación teórica</label>
+    <textarea id="categoria-descripcion" style="min-height:200px;" placeholder="Notas extensas: rol sensorial, criterios de uso, filosofía detrás de esta categoría…"></textarea>
+    <div class="modal-acciones">
+      <button class="btn" onclick="cerrarModal('modal-categoria-info')">Cancelar</button>
+      <button class="btn btn-primario" onclick="guardarCategoriaInfoUI()">Guardar</button>
+    </div>
+  </div>
+</div>
+
 <!-- ===================== MODAL INSUMO ===================== -->
 <div class="overlay" id="modal-insumo">
   <div class="modal">
@@ -600,6 +711,7 @@ let SCRIPT_URL = localStorage.getItem(CONFIG_KEY) || '';
 const state = {
   recetas: [],
   insumos: [],
+  categoriasInfo: [],
   recetaActualId: null,
   itemActualId: null,
   insumoActualId: null
@@ -695,13 +807,14 @@ function cargarCacheLocal() {
   try {
     const r = JSON.parse(localStorage.getItem('armitano_cache_recetas') || '[]');
     const i = JSON.parse(localStorage.getItem('armitano_cache_insumos') || '[]');
-    state.recetas = r; state.insumos = i;
+    const c = JSON.parse(localStorage.getItem('armitano_cache_categorias') || '[]');
+    state.recetas = r; state.insumos = i; state.categoriasInfo = c;
     renderRecetas(); renderInsumos(); renderSelectCostos();
   } catch (e) {}
 }
 
 function refrescarDatos() {
-  Promise.all([apiCall('getRecetas'), apiCall('getInsumos')]).then(([recetas, insumos]) => {
+  Promise.all([apiCall('getRecetas'), apiCall('getInsumos'), apiCall('getCategoriasInfo')]).then(([recetas, insumos, categorias]) => {
     if (Array.isArray(recetas)) {
       state.recetas = recetas;
       localStorage.setItem('armitano_cache_recetas', JSON.stringify(recetas));
@@ -709,6 +822,10 @@ function refrescarDatos() {
     if (Array.isArray(insumos)) {
       state.insumos = insumos;
       localStorage.setItem('armitano_cache_insumos', JSON.stringify(insumos));
+    }
+    if (Array.isArray(categorias)) {
+      state.categoriasInfo = categorias;
+      localStorage.setItem('armitano_cache_categorias', JSON.stringify(categorias));
     }
     renderRecetas(); renderInsumos(); renderSelectCostos();
   });
@@ -721,6 +838,7 @@ function cambiarTab(nombre) {
   document.getElementById('vista-' + nombre).classList.add('activa');
   document.querySelector('.tab-btn[data-vista="' + nombre + '"]').classList.add('activo');
   if (nombre === 'stock') cargarStock();
+  if (nombre === 'marca') cargarMarca();
 }
 
 /* ---------------- toast ---------------- */
@@ -866,6 +984,21 @@ function eliminarRecetaActual() {
   });
 }
 
+function cambiarEstadoDirecto() {
+  const r = state.recetas.find(x => String(x.ID) === String(state.recetaActualId));
+  if (!r) return;
+  const nuevoEstado = document.getElementById('detalle-estado-selector').value;
+  const payload = { ID: r.ID, Estado: nuevoEstado };
+  if (nuevoEstado !== 'Teórica' && !r.FechaInicioMaceracion) {
+    payload.FechaInicioMaceracion = new Date().toISOString().slice(0, 10);
+  }
+  apiCall('saveRecetaHeader', payload).then(res => {
+    if (res && res.error) { mostrarToast('Error: ' + res.error, true); return; }
+    mostrarToast('Estado actualizado.');
+    refrescarDatos();
+  });
+}
+
 function abrirDetalleReceta(id) {
   state.recetaActualId = id;
   const r = state.recetas.find(x => String(x.ID) === String(id));
@@ -875,9 +1008,9 @@ function abrirDetalleReceta(id) {
       r.TipoProceso, 
       r.TiempoMaceracionExtractoDias ? 'Extracto: ' + r.TiempoMaceracionExtractoDias + ' días' : '',
       r.TiempoReposoMezclaDias ? 'Reposo: ' + r.TiempoReposoMezclaDias + ' días' : '',
-      r.VolumenBatchMl ? 'Batch: ' + r.VolumenBatchMl + ' ml' : '',
-      r.Estado
+      r.VolumenBatchMl ? 'Batch: ' + r.VolumenBatchMl + ' ml' : ''
     ].filter(Boolean).join('  ·  ') : '');
+  document.getElementById('detalle-estado-selector').value = r ? (r.Estado || 'Teórica') : 'Teórica';
   document.getElementById('detalle-notas').textContent = r && r.Notas ? r.Notas : '';
   cambiarSubtabDetalle('items');
   document.getElementById('lista-items').innerHTML = '<div class="vacio"><span class="spinner"></span>Cargando insumos…</div>';
@@ -1143,23 +1276,38 @@ function renderInsumos() {
   clasificaciones.forEach(clas => {
     const items = state.insumos.filter(i => (i.Clasificacion || '') === clas);
     if (!items.length) return;
-    html += '<div class="grupo-insumos"><h4>' + escapeHtml(clas) + '</h4>';
+    html += '<div class="grupo-insumos">' + tituloCategoria(clas, 'Clasificacion');
     if (clas === 'Botánico') {
       const subs = ['Agentes de Amargor', 'Herbales', 'Florales', 'Cítricos-Frutales', 'Especiados'];
       subs.forEach(sub => {
         const subItems = items.filter(i => (i.Subclasificacion || '') === sub);
         if (!subItems.length) return;
-        html += '<h5>' + escapeHtml(sub) + '</h5>';
+        html += tituloCategoria(sub, 'Subclasificacion');
         html += subItems.map(filaInsumo).join('');
       });
       const sinSub = items.filter(i => !subs.includes(i.Subclasificacion || ''));
-      if (sinSub.length) { html += '<h5>Sin subclasificación</h5>' + sinSub.map(filaInsumo).join(''); }
+      if (sinSub.length) { html += tituloCategoria('Sin subclasificación', 'Subclasificacion') + sinSub.map(filaInsumo).join(''); }
     } else {
       html += items.map(filaInsumo).join('');
     }
     html += '</div>';
   });
   cont.innerHTML = html || '<div class="vacio">Sin insumos.</div>';
+}
+
+function tituloCategoria(clave, tipo) {
+  const info = (state.categoriasInfo || []).find(c => c.Clave === clave && c.Tipo === tipo);
+  const desc = info ? info.Descripcion : '';
+  const esClasificacion = tipo === 'Clasificacion';
+  const tag = esClasificacion ? 'h4' : 'h5';
+  const claseDesc = esClasificacion ? 'cat-descripcion-preview' : 'cat-descripcion-preview subcat';
+  const preview = desc
+    ? escapeHtml(desc.length > 140 ? desc.slice(0, 140) + '…' : desc)
+    : '<span style="opacity:.55;">+ agregar descripción teórica</span>';
+  return '<' + tag + ' class="cat-clickable" onclick="abrirModalCategoriaInfo(\'' + escapeHtml(clave).replace(/'/g, "\\'") + '\',\'' + tipo + '\')">' +
+      escapeHtml(clave) + ' <span class="cat-editar-icono">✎</span>' +
+    '</' + tag + '>' +
+    '<p class="' + claseDesc + '" onclick="abrirModalCategoriaInfo(\'' + escapeHtml(clave).replace(/'/g, "\\'") + '\',\'' + tipo + '\')">' + preview + '</p>';
 }
 
 function filaInsumo(i) {
@@ -1169,6 +1317,33 @@ function filaInsumo(i) {
     '</span>' +
     '<span class="precio">$' + formatearNumero(i.PrecioPorUnidad) + ' / ' + escapeHtml(i.UnidadMedida || '') + '</span>' +
   '</div>';
+}
+
+function abrirModalCategoriaInfo(clave, tipo) {
+  const info = (state.categoriasInfo || []).find(c => c.Clave === clave && c.Tipo === tipo);
+  document.getElementById('titulo-modal-categoria').textContent =
+    (tipo === 'Clasificacion' ? 'Categoría — ' : 'Subcategoría — ') + clave;
+  document.getElementById('categoria-clave').value = clave;
+  document.getElementById('categoria-tipo').value = tipo;
+  document.getElementById('categoria-descripcion').value = info ? (info.Descripcion || '') : '';
+  abrirModal('modal-categoria-info');
+}
+
+function guardarCategoriaInfoUI() {
+  const data = {
+    Clave: document.getElementById('categoria-clave').value,
+    Tipo: document.getElementById('categoria-tipo').value,
+    Descripcion: document.getElementById('categoria-descripcion').value
+  };
+  apiCall('saveCategoriaInfo', data).then(res => {
+    if (res && res.error) { mostrarToast('Error: ' + res.error, true); return; }
+    mostrarToast('Descripción guardada.');
+    cerrarModal('modal-categoria-info');
+    apiCall('getCategoriasInfo').then(r => {
+      state.categoriasInfo = Array.isArray(r) ? r : [];
+      renderInsumos();
+    });
+  });
 }
 
 function toggleSubclasificacion() {
@@ -1414,6 +1589,81 @@ function cargarHistorialInsumo(insumoId) {
   apiCall('getStock').then(res => {
     const item = (Array.isArray(res) ? res : []).find(x => String(x.insumoId) === String(insumoId));
     document.getElementById('insumo-stock-actual').value = item ? (formatearNumero(item.stockActual) + ' ' + (item.unidad || '')) : '—';
+  });
+}
+
+/* ============================================================
+   MARCA
+   ============================================================ */
+
+function cargarMarca() {
+  const cont = document.getElementById('grid-marca-secciones');
+  cont.innerHTML = '<div class="vacio"><span class="spinner"></span>Cargando…</div>';
+  apiCall('getMarca').then(res => {
+    if (!res || res.error) { cont.innerHTML = '<div class="vacio">No se pudo cargar.</div>'; return; }
+    document.getElementById('marca-descripcion-general').value = (res.general && res.general.DescripcionGeneral) || '';
+    state._marcaSecciones = res.secciones || [];
+    renderMarcaSecciones(state._marcaSecciones);
+  });
+}
+
+function guardarMarcaGeneral() {
+  const data = { DescripcionGeneral: document.getElementById('marca-descripcion-general').value };
+  apiCall('saveMarcaGeneral', data).then(res => {
+    if (res && res.error) { mostrarToast('Error: ' + res.error, true); return; }
+    mostrarToast('Descripción general guardada.');
+  });
+}
+
+function renderMarcaSecciones(secciones) {
+  const cont = document.getElementById('grid-marca-secciones');
+  if (!secciones.length) {
+    cont.innerHTML = '<div class="vacio">Todavía no hay secciones. Creá la primera.</div>';
+    return;
+  }
+  cont.innerHTML = secciones.map(s =>
+    '<div class="card-receta" onclick="abrirModalMarcaSeccion(\'' + s.ID + '\')">' +
+      '<h3>' + escapeHtml(s.Titulo || 'Sin título') + '</h3>' +
+      '<div class="meta">' + escapeHtml((s.Contenido || '').slice(0, 110)) + ((s.Contenido || '').length > 110 ? '…' : '') + '</div>' +
+    '</div>'
+  ).join('');
+}
+
+function abrirModalMarcaSeccion(id) {
+  const s = id ? (state._marcaSecciones || []).find(x => String(x.ID) === String(id)) : null;
+  document.getElementById('titulo-modal-marca-seccion').textContent = s ? 'Editar sección' : 'Nueva sección';
+  document.getElementById('marca-seccion-id').value = s ? s.ID : '';
+  document.getElementById('marca-seccion-titulo').value = s ? s.Titulo : '';
+  document.getElementById('marca-seccion-orden').value = s ? s.Orden : (state._marcaSecciones ? state._marcaSecciones.length + 1 : 1);
+  document.getElementById('marca-seccion-contenido').value = s ? s.Contenido : '';
+  document.getElementById('btn-borrar-marca-seccion').style.display = s ? 'inline-block' : 'none';
+  abrirModal('modal-marca-seccion');
+}
+
+function guardarMarcaSeccion() {
+  const data = {
+    ID: document.getElementById('marca-seccion-id').value || undefined,
+    Titulo: document.getElementById('marca-seccion-titulo').value.trim(),
+    Orden: document.getElementById('marca-seccion-orden').value,
+    Contenido: document.getElementById('marca-seccion-contenido').value
+  };
+  if (!data.Titulo) { mostrarToast('Ponele un título a la sección.', true); return; }
+  apiCall('saveMarcaSeccion', data).then(res => {
+    if (res && res.error) { mostrarToast('Error: ' + res.error, true); return; }
+    mostrarToast('Sección guardada.');
+    cerrarModal('modal-marca-seccion');
+    cargarMarca();
+  });
+}
+
+function borrarMarcaSeccionActual() {
+  const id = document.getElementById('marca-seccion-id').value;
+  if (!id) return;
+  if (!confirm('¿Eliminar esta sección?')) return;
+  apiCall('deleteMarcaSeccion', { id: id }).then(() => {
+    mostrarToast('Eliminada.');
+    cerrarModal('modal-marca-seccion');
+    cargarMarca();
   });
 }
 

@@ -1,0 +1,1415 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ARMITANO · Gestión</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=EB+Garamond:ital,wght@0,400;0,600;1,400&display=swap');
+
+:root{
+  --negro:#0b0a08;
+  --panel:#161310;
+  --panel-2:#1f1a14;
+  --linea:#3a3226;
+  --dorado:#c9a961;
+  --dorado-brillante:#e8d39a;
+  --rojo:#7a1f2b;
+  --rojo-claro:#a8394a;
+  --hueso:#e8e2d4;
+  --hueso-muted:#9a9080;
+  --ok:#6f9a6f;
+  --radius:6px;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  background:var(--negro);
+  color:var(--hueso);
+  font-family:'EB Garamond', Georgia, serif;
+  font-size:16px;
+  min-height:100vh;
+  background-image:
+    radial-gradient(circle at 50% 0%, rgba(201,169,97,0.05), transparent 60%);
+}
+h1,h2,h3,.serif-display{font-family:'Cormorant Garamond', Georgia, serif;}
+::selection{background:var(--rojo); color:var(--hueso);}
+
+/* ---------- estructura ---------- */
+.wrap{max-width:1080px; margin:0 auto; padding:28px 20px 80px;}
+
+.marca{text-align:center; margin-bottom:22px;}
+.marca .sello{
+  width:46px; height:46px; border-radius:50%;
+  background:var(--rojo); border:2px solid var(--dorado);
+  display:flex; align-items:center; justify-content:center;
+  font-family:'Cormorant Garamond', serif; font-weight:700; font-size:20px;
+  color:var(--dorado-brillante); margin:0 auto 10px;
+}
+.marca h1{
+  font-size:40px; font-weight:600; letter-spacing:5px; margin:0;
+  color:var(--dorado); text-transform:uppercase;
+}
+.marca .lema{
+  font-size:13px; letter-spacing:3px; color:var(--hueso-muted);
+  text-transform:uppercase; margin-top:6px;
+}
+.divisor-diamante{
+  display:flex; align-items:center; gap:10px; justify-content:center;
+  margin:16px auto 24px; max-width:340px;
+}
+.divisor-diamante .linea{flex:1; height:1px; background:var(--linea);}
+.divisor-diamante .diamante{
+  width:6px; height:6px; background:var(--dorado); transform:rotate(45deg);
+}
+
+/* ---------- nav tabs ---------- */
+.tabs{display:flex; gap:10px; justify-content:center; margin-bottom:28px; flex-wrap:wrap;}
+.tab-btn{
+  background:var(--panel); border:1px solid var(--linea); color:var(--hueso-muted);
+  font-family:'EB Garamond', serif; font-size:15px; letter-spacing:1.5px;
+  text-transform:uppercase; padding:10px 22px; border-radius:var(--radius);
+  cursor:pointer; transition:all .15s ease;
+}
+.tab-btn:hover{border-color:var(--dorado); color:var(--dorado-brillante);}
+.tab-btn.activo{
+  background:var(--rojo); border-color:var(--dorado); color:var(--dorado-brillante);
+}
+
+.vista{display:none;}
+.vista.activa{display:block;}
+
+/* ---------- paneles / cards ---------- */
+.panel{
+  background:var(--panel); border:1px solid var(--linea); border-radius:8px;
+  padding:20px 22px; margin-bottom:18px;
+}
+.panel-header{
+  display:flex; justify-content:space-between; align-items:center;
+  margin-bottom:14px; flex-wrap:wrap; gap:10px;
+}
+.panel-header h2{
+  color:var(--dorado); font-size:22px; font-weight:600; margin:0;
+  letter-spacing:1px;
+}
+.subtexto{color:var(--hueso-muted); font-size:14px; margin:2px 0 0;}
+
+/* ---------- botones ---------- */
+button{font-family:'EB Garamond', serif;}
+.btn{
+  background:var(--panel-2); border:1px solid var(--linea); color:var(--hueso);
+  padding:9px 16px; border-radius:var(--radius); cursor:pointer; font-size:15px;
+  transition:all .15s ease;
+}
+.btn:hover{border-color:var(--dorado); color:var(--dorado-brillante);}
+.btn-primario{
+  background:var(--rojo); border-color:var(--rojo); color:#fff;
+}
+.btn-primario:hover{background:var(--rojo-claro); border-color:var(--dorado); color:var(--dorado-brillante);}
+.btn-fantasma{background:transparent; border-color:transparent; color:var(--hueso-muted); padding:6px 10px;}
+.btn-fantasma:hover{color:var(--rojo-claro); border-color:transparent;}
+.btn-sm{padding:5px 10px; font-size:13px;}
+
+/* ---------- listas / grids ---------- */
+.grid-recetas{display:grid; grid-template-columns:repeat(auto-fill, minmax(230px,1fr)); gap:14px;}
+.card-receta{
+  background:var(--panel-2); border:1px solid var(--linea); border-radius:8px;
+  padding:16px; cursor:pointer; transition:all .15s ease; position:relative;
+}
+.card-receta:hover{border-color:var(--dorado);}
+.card-receta .id{
+  font-size:12px; letter-spacing:2px; color:var(--rojo-claro); text-transform:uppercase;
+}
+.card-receta h3{margin:4px 0 8px; font-size:22px; color:var(--dorado-brillante);}
+.card-receta .meta{font-size:13px; color:var(--hueso-muted); line-height:1.5;}
+.estado-badge{
+  display:inline-block; font-size:11px; letter-spacing:1px; text-transform:uppercase;
+  padding:2px 8px; border-radius:20px; border:1px solid var(--linea); margin-top:8px;
+  color:var(--hueso-muted);
+}
+.estado-badge.embotellada{color:var(--ok); border-color:var(--ok);}
+.estado-badge.reposando{color:var(--dorado); border-color:var(--dorado);}
+.proximo-paso{
+  color:var(--dorado-brillante); font-size:12px; margin-top:10px; padding-top:8px;
+  border-top:1px solid var(--linea);
+}
+
+/* ---------- formularios ---------- */
+label{display:block; font-size:13px; color:var(--hueso-muted); margin-bottom:4px; letter-spacing:.5px;}
+input,select,textarea{
+  width:100%; background:var(--panel-2); border:1px solid var(--linea); color:var(--hueso);
+  padding:9px 10px; border-radius:var(--radius); font-family:'EB Garamond', serif; font-size:15px;
+  margin-bottom:12px;
+}
+input:focus,select:focus,textarea:focus{outline:none; border-color:var(--dorado);}
+.campo-fila{display:grid; grid-template-columns:1fr 1fr; gap:14px;}
+.campo-fila-3{display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px;}
+textarea{min-height:60px; resize:vertical;}
+
+/* ---------- tablas ---------- */
+table{width:100%; border-collapse:collapse; font-size:15px;}
+th{
+  text-align:left; color:var(--hueso-muted); font-size:12px; letter-spacing:1px;
+  text-transform:uppercase; padding:8px 10px; border-bottom:1px solid var(--dorado); font-weight:600;
+}
+td{padding:9px 10px; border-bottom:1px solid var(--linea);}
+tr:hover td{background:rgba(201,169,97,0.04);}
+td.num{text-align:right; font-variant-numeric:tabular-nums;}
+th.num{text-align:right;}
+
+/* ---------- modal ---------- */
+.overlay{
+  display:none; position:fixed; inset:0; background:rgba(0,0,0,0.72); z-index:100;
+  align-items:flex-start; justify-content:center; padding:40px 16px; overflow-y:auto;
+}
+.overlay.activo{display:flex;}
+.modal{
+  background:var(--panel); border:1px solid var(--dorado); border-radius:8px;
+  max-width:600px; width:100%; padding:24px; margin-bottom:40px;
+}
+.modal h3{color:var(--dorado); margin:0 0 16px; font-size:24px;}
+.modal-acciones{display:flex; justify-content:flex-end; gap:10px; margin-top:6px;}
+
+/* ---------- toast ---------- */
+.toast{
+  position:fixed; bottom:20px; left:50%; transform:translateX(-50%);
+  background:var(--panel); border:1px solid var(--dorado); color:var(--hueso);
+  padding:10px 20px; border-radius:var(--radius); font-size:14px; z-index:200;
+  opacity:0; transition:opacity .2s ease; pointer-events:none;
+}
+.toast.mostrar{opacity:1;}
+.toast.error{border-color:var(--rojo-claro); color:#f0b8b8;}
+
+/* ---------- config ---------- */
+.config-box{max-width:500px; margin:60px auto; text-align:center;}
+.config-box input{margin-bottom:14px;}
+
+/* ---------- costos ---------- */
+.resumen-costos{display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:12px; margin-top:16px;}
+.metrica{background:var(--panel-2); border:1px solid var(--linea); border-radius:var(--radius); padding:12px 14px;}
+.metrica .label{font-size:11px; letter-spacing:1px; text-transform:uppercase; color:var(--hueso-muted);}
+.metrica .valor{font-size:22px; color:var(--dorado-brillante); font-weight:600; margin-top:4px;}
+
+.vacio{text-align:center; color:var(--hueso-muted); padding:30px 10px; font-style:italic;}
+
+.grupo-insumos{margin-bottom:22px;}
+.grupo-insumos h4{color:var(--dorado); font-size:16px; letter-spacing:1px; text-transform:uppercase; margin:18px 0 8px; border-bottom:1px solid var(--linea); padding-bottom:6px;}
+.grupo-insumos h5{color:var(--hueso-muted); font-size:13px; letter-spacing:1px; margin:10px 0 6px;}
+.fila-insumo{display:flex; justify-content:space-between; align-items:center; padding:8px 10px; border-bottom:1px solid var(--linea); font-size:14px;}
+.fila-insumo:hover{background:rgba(201,169,97,0.04);}
+.fila-insumo .nombre{color:var(--hueso);}
+.fila-insumo .precio{color:var(--dorado-brillante); font-variant-numeric:tabular-nums; margin-right:14px;}
+.fila-insumo .desc{color:var(--hueso-muted); font-size:12px; display:block; margin-top:2px;}
+
+.subtabs{display:flex; gap:8px; margin-bottom:14px; border-bottom:1px solid var(--linea);}
+.subtab-btn{
+  background:transparent; border:none; border-bottom:2px solid transparent; color:var(--hueso-muted);
+  font-family:'EB Garamond', serif; font-size:14px; letter-spacing:1px; text-transform:uppercase;
+  padding:8px 4px; cursor:pointer; margin-right:14px;
+}
+.subtab-btn:hover{color:var(--dorado-brillante);}
+.subtab-btn.activo{color:var(--dorado); border-bottom-color:var(--rojo);}
+.subpanel{display:none;}
+.subpanel.activo{display:block;}
+
+.estrellas{color:var(--dorado); letter-spacing:1px;}
+.alerta-unidad{color:var(--rojo-claro); font-size:12px; cursor:help;}
+td.num.error{color:var(--rojo-claro);}
+
+.stock-grupo-titulo{
+  color:var(--dorado); font-size:14px; letter-spacing:1.5px; text-transform:uppercase;
+  margin:22px 0 10px; padding-bottom:6px; border-bottom:1px solid var(--linea);
+}
+.stock-grupo-titulo:first-child{margin-top:0;}
+.stock-fila{
+  display:grid; grid-template-columns:1fr 110px; gap:14px; align-items:center;
+  padding:9px 4px; cursor:pointer; border-radius:var(--radius);
+}
+.stock-fila:hover{background:rgba(201,169,97,0.05);}
+.stock-fila .nombre-cant{display:flex; justify-content:space-between; font-size:14px; margin-bottom:5px;}
+.stock-fila .nombre-cant .nom{color:var(--hueso);}
+.stock-fila .nombre-cant .cant{color:var(--hueso-muted); font-variant-numeric:tabular-nums;}
+.stock-barra-fondo{background:var(--panel-2); border:1px solid var(--linea); border-radius:20px; height:9px; overflow:hidden;}
+.stock-barra-fill{height:100%; border-radius:20px; transition:width .3s ease;}
+.stock-barra-fill.critico{background:var(--rojo-claro);}
+.stock-barra-fill.atencion{background:var(--dorado);}
+.stock-barra-fill.ok{background:var(--ok);}
+.stock-etiqueta{
+  font-size:11px; letter-spacing:1px; text-transform:uppercase; text-align:right; padding-left:8px;
+}
+.stock-etiqueta.critico{color:var(--rojo-claro);}
+.stock-etiqueta.atencion{color:var(--dorado);}
+.stock-etiqueta.ok{color:var(--ok);}
+.stock-etiqueta.sinumbral{color:var(--hueso-muted);}
+
+.item-linea{
+  display:grid; grid-template-columns:2fr 1fr 1fr auto; gap:10px; align-items:end;
+  padding:10px 0; border-bottom:1px solid var(--linea);
+}
+.spinner{
+  width:16px; height:16px; border-radius:50%; border:2px solid var(--linea);
+  border-top-color:var(--dorado); display:inline-block; animation:girar .7s linear infinite;
+  vertical-align:middle; margin-right:8px;
+}
+@keyframes girar{to{transform:rotate(360deg);}}
+
+@media(max-width:640px){
+  .campo-fila,.campo-fila-3{grid-template-columns:1fr;}
+  .item-linea{grid-template-columns:1fr; gap:6px;}
+  .marca h1{font-size:30px; letter-spacing:3px;}
+}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <div class="marca">
+    <div class="sello">A</div>
+    <h1>Armitano</h1>
+    <div class="lema">Calidad · Prudencia · Vínculo</div>
+  </div>
+  <div class="divisor-diamante"><span class="linea"></span><span class="diamante"></span><span class="linea"></span></div>
+
+  <div id="config-view" class="config-box" style="display:none;">
+    <h2 style="color:var(--dorado);">Conectar con la base de datos</h2>
+    <p class="subtexto" style="margin-bottom:16px;">Pegá la URL de tu Apps Script publicado (termina en <code>/exec</code>).</p>
+    <input type="text" id="input-script-url" placeholder="https://script.google.com/macros/s/AKfycb.../exec">
+    <button class="btn btn-primario" onclick="guardarConfig()">Conectar</button>
+    <p id="config-msg" class="subtexto" style="margin-top:14px;"></p>
+  </div>
+
+  <div id="app-view" style="display:none;">
+    <div class="tabs">
+      <button class="tab-btn activo" data-vista="recetas" onclick="cambiarTab('recetas')">Recetas</button>
+      <button class="tab-btn" data-vista="insumos" onclick="cambiarTab('insumos')">Insumos</button>
+      <button class="tab-btn" data-vista="costos" onclick="cambiarTab('costos')">Centro de costos</button>
+      <button class="tab-btn" data-vista="stock" onclick="cambiarTab('stock')">Stock</button>
+      <button class="tab-btn" style="opacity:.6;" onclick="abrirConfigManual()" title="Reconfigurar conexión">⚙</button>
+    </div>
+
+    <!-- ===================== VISTA RECETAS ===================== -->
+    <div id="vista-recetas" class="vista activa">
+      <div class="panel">
+        <div class="panel-header">
+          <div>
+            <h2>Recetas</h2>
+            <p class="subtexto">Seleccioná una para ver insumos, cantidades y método.</p>
+          </div>
+          <button class="btn btn-primario" onclick="abrirModalReceta()">+ Nueva receta</button>
+        </div>
+        <div id="grid-recetas" class="grid-recetas"><div class="vacio">Cargando…</div></div>
+      </div>
+    </div>
+
+    <!-- ===================== VISTA INSUMOS ===================== -->
+    <div id="vista-insumos" class="vista">
+      <div class="panel">
+        <div class="panel-header">
+          <div>
+            <h2>Insumos</h2>
+            <p class="subtexto">Catálogo maestro. Cada insumo define su unidad de medida y precio — de acá se alimenta el Centro de Costos.</p>
+          </div>
+          <button class="btn btn-primario" onclick="abrirModalInsumo()">+ Nuevo insumo</button>
+        </div>
+        <div id="lista-insumos"><div class="vacio">Cargando…</div></div>
+      </div>
+    </div>
+
+    <!-- ===================== VISTA COSTOS ===================== -->
+    <div id="vista-costos" class="vista">
+      <div class="panel">
+        <div class="panel-header">
+          <div>
+            <h2>Centro de costos</h2>
+            <p class="subtexto">Elegí una receta para calcular su costo real según el catálogo de insumos.</p>
+          </div>
+        </div>
+        <select id="select-receta-costos" onchange="calcularCostos()">
+          <option value="">— Seleccionar receta —</option>
+        </select>
+        <div id="resultado-costos"></div>
+      </div>
+    </div>
+
+    <!-- ===================== VISTA STOCK ===================== -->
+    <div id="vista-stock" class="vista">
+      <div class="panel">
+        <div class="panel-header">
+          <div>
+            <h2>Stock</h2>
+            <p class="subtexto">Lo más urgente arriba. Hacé click en un insumo para ver el historial o cargar una compra.</p>
+          </div>
+        </div>
+        <div id="stock-contenido"><div class="vacio">Cargando…</div></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ===================== MODAL RECETA (header) ===================== -->
+<div class="overlay" id="modal-receta">
+  <div class="modal">
+    <h3 id="titulo-modal-receta">Nueva receta</h3>
+    <label>ID de receta</label>
+    <input type="text" id="receta-id" placeholder="Ej. VER-005 (dejalo vacío para autogenerar)">
+    <label>Nombre</label>
+    <input type="text" id="receta-nombre" placeholder="Ej. VER-005">
+    <div class="campo-fila">
+      <div><label>Fecha de creación</label><input type="date" id="receta-fecha"></div>
+      <div><label>Estado</label>
+        <select id="receta-estado">
+          <option>Teórica</option>
+          <option>En maceración</option>
+          <option>Embotellada</option>
+          <option>Reposando</option>
+          <option>Evaluada</option>
+        </select>
+      </div>
+    </div>
+    <div class="campo-fila">
+      <div><label>Maceración extracto botánico (días)</label><input type="number" id="receta-maceracion-extracto" placeholder="Ej. 5"></div>
+      <div><label>Reposo tras mezcla (días)</label><input type="number" id="receta-reposo-mezcla" placeholder="Ej. 5"></div>
+    </div>
+    <div class="campo-fila">
+      <div><label>Volumen del batch (ml)</label><input type="number" id="receta-volumen" placeholder="Ej. 965"></div>
+    </div>
+    <label>Tipo de proceso</label>
+    <input type="text" id="receta-proceso" placeholder="Ej. Maceración madre en alcohol, ensamble con vino">
+    <label>Notas generales</label>
+    <textarea id="receta-notas" placeholder="Método, observaciones, referencia a variantes anteriores…"></textarea>
+    <div class="modal-acciones">
+      <button class="btn" onclick="cerrarModal('modal-receta')">Cancelar</button>
+      <button class="btn btn-primario" onclick="guardarReceta()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== MODAL DETALLE RECETA ===================== -->
+<div class="overlay" id="modal-detalle">
+  <div class="modal" style="max-width:760px;">
+    <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+      <h3 id="detalle-nombre">—</h3>
+      <button class="btn-fantasma" onclick="cerrarModal('modal-detalle')" style="font-size:20px;">×</button>
+    </div>
+    <div id="detalle-meta" class="subtexto" style="margin-bottom:14px;"></div>
+    <div id="detalle-notas" class="subtexto" style="margin-bottom:18px;"></div>
+
+    <div class="subtabs">
+      <button class="subtab-btn activo" data-subtab="items" onclick="cambiarSubtabDetalle('items')">Insumos y pasos</button>
+      <button class="subtab-btn" data-subtab="evaluacion" onclick="cambiarSubtabDetalle('evaluacion')">Evaluación y catas</button>
+    </div>
+
+    <div id="subpanel-items" class="subpanel activo">
+      <div style="display:flex; justify-content:flex-end; gap:8px; margin-bottom:6px;">
+        <button class="btn btn-sm" onclick="abrirModalItem('insumo')">+ Insumo</button>
+        <button class="btn btn-sm" onclick="abrirModalItem('paso')">+ Paso</button>
+      </div>
+      <div id="lista-items"></div>
+    </div>
+
+    <div id="subpanel-evaluacion" class="subpanel">
+      <div style="display:flex; justify-content:flex-end; margin-bottom:6px;">
+        <button class="btn btn-sm" onclick="abrirModalEvaluacion()">+ Nueva cata</button>
+      </div>
+      <div id="lista-evaluaciones"></div>
+    </div>
+
+    <div class="modal-acciones">
+      <button class="btn-fantasma" onclick="eliminarRecetaActual()">Eliminar receta</button>
+      <button class="btn" onclick="editarRecetaActual()">Editar datos generales</button>
+      <button class="btn btn-primario" onclick="cerrarModal('modal-detalle')">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== MODAL ITEM DE RECETA ===================== -->
+<div class="overlay" id="modal-item">
+  <div class="modal">
+    <h3 id="titulo-modal-item">Agregar insumo</h3>
+    <input type="hidden" id="item-id">
+    <input type="hidden" id="item-tipo">
+
+    <div id="item-campos-insumo">
+      <label>Insumo</label>
+      <select id="item-insumo-select" onchange="autocompletarUnidadItem()"></select>
+      <div class="campo-fila">
+        <div><label>Cantidad</label><input type="number" step="any" id="item-cantidad"></div>
+        <div><label>Unidad</label><input type="text" id="item-unidad" list="item-unidad-datalist"><datalist id="item-unidad-datalist"></datalist></div>
+      </div>
+    </div>
+
+    <div id="item-campos-paso" style="display:none;">
+      <label>Categoría</label>
+      <select id="item-categoria">
+        <option>BASE</option><option>ALMÍBAR</option><option>BOTÁNICO</option>
+        <option>CÍTRICO</option><option>FINAL</option><option>MACERACIÓN</option><option>OTRO</option>
+      </select>
+      <label>Descripción del paso</label>
+      <input type="text" id="item-paso-nombre" placeholder="Ej. Reposo final embotellado">
+      <div class="campo-fila">
+        <div><label>Cantidad</label><input type="text" id="item-paso-cantidad" placeholder="Ej. 5"></div>
+        <div><label>Unidad</label><input type="text" id="item-paso-unidad" placeholder="Ej. días"></div>
+      </div>
+    </div>
+
+    <div class="campo-fila">
+      <div><label>Fase / día</label><input type="text" id="item-fase" placeholder="Ej. Día 1"></div>
+      <div><label>Orden</label><input type="number" id="item-orden" placeholder="1"></div>
+    </div>
+    <label>Nota</label>
+    <textarea id="item-nota" placeholder="Impacto sensorial esperado, aclaraciones…"></textarea>
+
+    <div class="modal-acciones">
+      <button class="btn" onclick="cerrarModal('modal-item')">Cancelar</button>
+      <button class="btn-fantasma" id="btn-borrar-item" style="display:none;" onclick="borrarItemActual()">Eliminar</button>
+      <button class="btn btn-primario" onclick="guardarItem()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== MODAL EVALUACIÓN / CATA ===================== -->
+<div class="overlay" id="modal-evaluacion">
+  <div class="modal">
+    <h3 id="titulo-modal-evaluacion">Nueva cata</h3>
+    <input type="hidden" id="eval-id">
+    <div class="campo-fila">
+      <div><label>Fecha</label><input type="date" id="eval-fecha"></div>
+      <div><label>Día de maceración</label><input type="number" id="eval-dia"></div>
+    </div>
+    <div class="campo-fila">
+      <div><label>Formato</label>
+        <select id="eval-formato">
+          <option>Pura</option><option>Tónica</option><option>Soda</option><option>Otro</option>
+        </select>
+      </div>
+      <div><label>Color</label><input type="text" id="eval-color" placeholder="Ej. Ámbar claro, apagado"></div>
+    </div>
+    <div class="campo-fila-3">
+      <div><label>Aroma (1–5)</label><input type="number" min="1" max="5" id="eval-aroma"></div>
+      <div><label>Dulzor (1–5)</label><input type="number" min="1" max="5" id="eval-dulzor"></div>
+      <div><label>Amargor (1–5)</label><input type="number" min="1" max="5" id="eval-amargor"></div>
+    </div>
+    <div class="campo-fila">
+      <div><label>Cuerpo (1–5)</label><input type="number" min="1" max="5" id="eval-cuerpo"></div>
+      <div><label>Tomabilidad (1–5)</label><input type="number" min="1" max="5" id="eval-tomabilidad"></div>
+    </div>
+    <label>¿Domina algún ingrediente?</label>
+    <input type="text" id="eval-domina" placeholder="Ej. Pomelo (esperado, deseado)">
+    <label>Notas de cata</label>
+    <textarea id="eval-notas" placeholder="Perfil, impresión general, comparación con otros batches…"></textarea>
+    <div class="modal-acciones">
+      <button class="btn" onclick="cerrarModal('modal-evaluacion')">Cancelar</button>
+      <button class="btn-fantasma" id="btn-borrar-evaluacion" style="display:none;" onclick="borrarEvaluacionActual()">Eliminar</button>
+      <button class="btn btn-primario" onclick="guardarEvaluacion()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== MODAL INSUMO ===================== -->
+<div class="overlay" id="modal-insumo">
+  <div class="modal">
+    <h3 id="titulo-modal-insumo">Nuevo insumo</h3>
+    <input type="hidden" id="insumo-id">
+    <label>Nombre</label>
+    <input type="text" id="insumo-nombre" placeholder="Ej. Ajenjo (Artemisia absinthium)">
+    <div class="campo-fila">
+      <div>
+        <label>Clasificación</label>
+        <select id="insumo-clasificacion" onchange="toggleSubclasificacion()">
+          <option>Botánico</option>
+          <option>Azúcar</option>
+          <option>Vino</option>
+          <option>Alcohol fortificante</option>
+          <option>Otro / Base</option>
+        </select>
+      </div>
+      <div id="campo-subclasificacion">
+        <label>Subclasificación</label>
+        <select id="insumo-subclasificacion">
+          <option>Agentes de Amargor</option>
+          <option>Herbales</option>
+          <option>Florales</option>
+          <option>Cítricos-Frutales</option>
+          <option>Especiados</option>
+        </select>
+      </div>
+    </div>
+    <div class="campo-fila">
+      <div><label>Unidad de medida</label><input type="text" id="insumo-unidad" list="insumo-unidad-datalist" placeholder="Ej. g, ml, L, unidad, gotas"><datalist id="insumo-unidad-datalist"><option value="g"><option value="kg"><option value="ml"><option value="L"><option value="unidad"><option value="gotas"></datalist></div>
+      <div><label>Precio por unidad ($)</label><input type="number" step="any" id="insumo-precio" placeholder="Ej. 30"></div>
+    </div>
+    <div class="campo-fila">
+      <div><label>Stock mínimo de alerta (en la misma unidad de arriba)</label><input type="number" step="any" id="insumo-stock-minimo" placeholder="Ej. 50"></div>
+      <div><label>Stock actual</label><input type="text" id="insumo-stock-actual" readonly placeholder="Se calcula solo, según compras y consumo"></div>
+    </div>
+    <div id="insumo-historial-stock" style="display:none; margin-bottom:14px;">
+      <label>Historial de movimientos</label>
+      <div id="insumo-historial-lista" style="max-height:160px; overflow-y:auto; border:1px solid var(--linea); border-radius:var(--radius); padding:4px 10px;"></div>
+    </div>
+    <label>Descripción / efectos</label>
+    <textarea id="insumo-descripcion" placeholder="Ej. Amargor profundo, alma del vermut, propiedades conservantes…"></textarea>
+    <label>Notas</label>
+    <textarea id="insumo-notas" placeholder="Proveedor, formato de compra, aclaraciones…"></textarea>
+    <div class="modal-acciones">
+      <button class="btn" onclick="cerrarModal('modal-insumo')">Cancelar</button>
+      <button class="btn-fantasma" id="btn-borrar-insumo" style="display:none;" onclick="borrarInsumoActual()">Eliminar</button>
+      <button class="btn" id="btn-compra-insumo" style="display:none;" onclick="abrirModalCompra()">+ Registrar compra</button>
+      <button class="btn btn-primario" onclick="guardarInsumo()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== MODAL COMPRA / AJUSTE DE STOCK ===================== -->
+<div class="overlay" id="modal-compra">
+  <div class="modal">
+    <h3 id="titulo-modal-compra">Registrar compra</h3>
+    <input type="hidden" id="compra-insumo-id">
+    <input type="hidden" id="compra-tipo">
+    <p class="subtexto" id="compra-insumo-nombre" style="margin-bottom:14px;"></p>
+    <div class="campo-fila">
+      <div><label>Fecha</label><input type="date" id="compra-fecha"></div>
+      <div><label>Cantidad</label><input type="number" step="any" id="compra-cantidad" placeholder="Ej. 1000"></div>
+    </div>
+    <label>Unidad</label>
+    <input type="text" id="compra-unidad" list="compra-unidad-datalist"><datalist id="compra-unidad-datalist"></datalist>
+    <label>Nota</label>
+    <input type="text" id="compra-nota" placeholder="Ej. Proveedor, N° de lote, motivo del ajuste…">
+    <div class="modal-acciones">
+      <button class="btn" onclick="cerrarModal('modal-compra')">Cancelar</button>
+      <button class="btn btn-primario" onclick="guardarCompraOAjuste()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============================================================
+   ARMITANO · index.html — capa de datos + UI
+   ============================================================ */
+
+const CONFIG_KEY = 'armitano_script_url';
+let SCRIPT_URL = localStorage.getItem(CONFIG_KEY) || '';
+
+const state = {
+  recetas: [],
+  insumos: [],
+  recetaActualId: null,
+  itemActualId: null,
+  insumoActualId: null
+};
+
+/* ---------------- conversión de unidades (espejo del Apps Script) ---------------- */
+const UNIDADES_INFO = {
+  g:'masa', gr:'masa', gramo:'masa', gramos:'masa',
+  kg:'masa', kilo:'masa', kilogramo:'masa', kilogramos:'masa',
+  ml:'volumen', mililitro:'volumen', mililitros:'volumen', cc:'volumen',
+  l:'volumen', lt:'volumen', litro:'volumen', litros:'volumen',
+  unidad:'conteo', unidades:'conteo', u:'conteo',
+  gota:'gotas', gotas:'gotas'
+};
+const OPCIONES_POR_DIMENSION = {
+  masa: ['g', 'kg'],
+  volumen: ['ml', 'L'],
+  conteo: ['unidad', 'unidades'],
+  gotas: ['gotas']
+};
+function normalizarUnidad(u) {
+  return String(u || '').trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+}
+function dimensionDe(u) {
+  const n = normalizarUnidad(u);
+  return UNIDADES_INFO[n] || null;
+}
+
+/* ---------------- API (JSONP) ---------------- */
+function apiCall(action, payload = {}) {
+  return new Promise((resolve) => {
+    if (!SCRIPT_URL) { resolve({ error: 'no_url' }); return; }
+    const cb = 'cb_' + Date.now() + '_' + Math.floor(Math.random() * 100000);
+    let resuelto = false;
+    window[cb] = (data) => {
+      if (resuelto) return;
+      resuelto = true;
+      delete window[cb];
+      resolve(data);
+    };
+    const url = SCRIPT_URL + '?action=' + encodeURIComponent(action) +
+      '&data=' + encodeURIComponent(JSON.stringify(payload)) +
+      '&callback=' + cb;
+    const s = document.createElement('script');
+    s.src = url;
+    s.onerror = () => { if (!resuelto) { resuelto = true; resolve({ error: 'network' }); delete window[cb]; } };
+    document.head.appendChild(s);
+    setTimeout(() => {
+      if (!resuelto) { resuelto = true; resolve({ error: 'timeout' }); delete window[cb]; }
+    }, 20000);
+  });
+}
+
+/* ---------------- arranque ---------------- */
+window.addEventListener('DOMContentLoaded', () => {
+  if (!SCRIPT_URL) {
+    document.getElementById('config-view').style.display = 'block';
+  } else {
+    iniciarApp();
+  }
+});
+
+function guardarConfig() {
+  const val = document.getElementById('input-script-url').value.trim();
+  if (!val) return;
+  document.getElementById('config-msg').textContent = 'Probando conexión…';
+  SCRIPT_URL = val;
+  apiCall('ping').then(res => {
+    if (res && res.ok) {
+      localStorage.setItem(CONFIG_KEY, val);
+      document.getElementById('config-view').style.display = 'none';
+      iniciarApp();
+    } else {
+      document.getElementById('config-msg').textContent = 'No se pudo conectar. Revisá la URL y que el Apps Script esté publicado con acceso "Cualquier persona".';
+      SCRIPT_URL = '';
+    }
+  });
+}
+
+function abrirConfigManual() {
+  document.getElementById('app-view').style.display = 'none';
+  document.getElementById('config-view').style.display = 'block';
+  document.getElementById('input-script-url').value = SCRIPT_URL;
+}
+
+function iniciarApp() {
+  document.getElementById('app-view').style.display = 'block';
+  cargarCacheLocal();
+  refrescarDatos();
+}
+
+function cargarCacheLocal() {
+  try {
+    const r = JSON.parse(localStorage.getItem('armitano_cache_recetas') || '[]');
+    const i = JSON.parse(localStorage.getItem('armitano_cache_insumos') || '[]');
+    state.recetas = r; state.insumos = i;
+    renderRecetas(); renderInsumos(); renderSelectCostos();
+  } catch (e) {}
+}
+
+function refrescarDatos() {
+  Promise.all([apiCall('getRecetas'), apiCall('getInsumos')]).then(([recetas, insumos]) => {
+    if (Array.isArray(recetas)) {
+      state.recetas = recetas;
+      localStorage.setItem('armitano_cache_recetas', JSON.stringify(recetas));
+    }
+    if (Array.isArray(insumos)) {
+      state.insumos = insumos;
+      localStorage.setItem('armitano_cache_insumos', JSON.stringify(insumos));
+    }
+    renderRecetas(); renderInsumos(); renderSelectCostos();
+  });
+}
+
+/* ---------------- tabs ---------------- */
+function cambiarTab(nombre) {
+  document.querySelectorAll('.vista').forEach(v => v.classList.remove('activa'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('activo'));
+  document.getElementById('vista-' + nombre).classList.add('activa');
+  document.querySelector('.tab-btn[data-vista="' + nombre + '"]').classList.add('activo');
+  if (nombre === 'stock') cargarStock();
+}
+
+/* ---------------- toast ---------------- */
+function mostrarToast(msg, esError) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast mostrar' + (esError ? ' error' : '');
+  setTimeout(() => { t.className = 'toast'; }, 2600);
+}
+
+function cerrarModal(id) { document.getElementById(id).classList.remove('activo'); }
+function abrirModal(id) { document.getElementById(id).classList.add('activo'); }
+
+/* ============================================================
+   RECETAS
+   ============================================================ */
+
+function calcularProximoPaso(r) {
+  if (!r.FechaCreacion) return null;
+  const inicio = new Date(r.FechaCreacion + 'T00:00:00');
+  if (isNaN(inicio.getTime())) return null;
+  const extracto = Number(r.TiempoMaceracionExtractoDias) || 0;
+  const reposo = Number(r.TiempoReposoMezclaDias) || 0;
+  if (!extracto && !reposo) return null;
+  const fechaFiltrado = new Date(inicio); fechaFiltrado.setDate(fechaFiltrado.getDate() + extracto);
+  const fechaLista = new Date(fechaFiltrado); fechaLista.setDate(fechaLista.getDate() + reposo);
+  const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
+  if (extracto > 0 && hoy < fechaFiltrado) {
+    return { texto: 'Filtrar extracto botánico', fecha: fechaFiltrado };
+  }
+  if (reposo > 0 && hoy < fechaLista) {
+    return { texto: 'Fin del reposo — lista', fecha: fechaLista };
+  }
+  return { texto: 'Lista para evaluar', fecha: fechaLista };
+}
+
+function renderRecetas() {
+  const cont = document.getElementById('grid-recetas');
+  if (!state.recetas.length) {
+    cont.innerHTML = '<div class="vacio">Todavía no hay recetas cargadas. Creá la primera.</div>';
+    return;
+  }
+  cont.innerHTML = state.recetas.map(r => {
+    const estadoClase = (r.Estado || '').toLowerCase().replace(/\s+/g, '');
+    const proximo = calcularProximoPaso(r);
+    return '<div class="card-receta" onclick="abrirDetalleReceta(\'' + r.ID + '\')">' +
+      '<div class="id">' + (r.ID || '') + '</div>' +
+      '<h3>' + escapeHtml(r.Nombre || 'Sin nombre') + '</h3>' +
+      '<div class="meta">' +
+        (r.TiempoMaceracionExtractoDias ? 'Extracto: ' + r.TiempoMaceracionExtractoDias + ' días<br>' : '') +
+        (r.TiempoReposoMezclaDias ? 'Reposo: ' + r.TiempoReposoMezclaDias + ' días<br>' : '') +
+        (r.VolumenBatchMl ? 'Batch: ' + r.VolumenBatchMl + ' ml' : '') +
+      '</div>' +
+      (r.Estado ? '<span class="estado-badge ' + estadoClase + '">' + escapeHtml(r.Estado) + '</span>' : '') +
+      (proximo ? '<div class="proximo-paso">→ ' + escapeHtml(proximo.texto) + ' — ' + proximo.fecha.toLocaleDateString('es-AR') + '</div>' : '') +
+    '</div>';
+  }).join('');
+}
+
+function abrirModalReceta() {
+  document.getElementById('titulo-modal-receta').textContent = 'Nueva receta';
+  const idInput = document.getElementById('receta-id');
+  idInput.value = '';
+  idInput.readOnly = false;
+  document.getElementById('receta-nombre').value = '';
+  document.getElementById('receta-fecha').value = new Date().toISOString().slice(0, 10);
+  document.getElementById('receta-estado').value = 'Teórica';
+  document.getElementById('receta-maceracion-extracto').value = '';
+  document.getElementById('receta-reposo-mezcla').value = '';
+  document.getElementById('receta-volumen').value = '';
+  document.getElementById('receta-proceso').value = '';
+  document.getElementById('receta-notas').value = '';
+  abrirModal('modal-receta');
+}
+
+function editarRecetaActual() {
+  const r = state.recetas.find(x => String(x.ID) === String(state.recetaActualId));
+  if (!r) return;
+  document.getElementById('titulo-modal-receta').textContent = 'Editar receta';
+  const idInput = document.getElementById('receta-id');
+  idInput.value = r.ID;
+  idInput.readOnly = true;
+  document.getElementById('receta-nombre').value = r.Nombre || '';
+  document.getElementById('receta-fecha').value = r.FechaCreacion || '';
+  document.getElementById('receta-estado').value = r.Estado || 'Teórica';
+  document.getElementById('receta-maceracion-extracto').value = r.TiempoMaceracionExtractoDias || '';
+  document.getElementById('receta-reposo-mezcla').value = r.TiempoReposoMezclaDias || '';
+  document.getElementById('receta-volumen').value = r.VolumenBatchMl || '';
+  document.getElementById('receta-proceso').value = r.TipoProceso || '';
+  document.getElementById('receta-notas').value = r.Notas || '';
+  cerrarModal('modal-detalle');
+  abrirModal('modal-receta');
+}
+
+function guardarReceta() {
+  const esNueva = !document.getElementById('receta-id').readOnly;
+  const data = {
+    ID: document.getElementById('receta-id').value.trim() || undefined,
+    Nombre: document.getElementById('receta-nombre').value.trim(),
+    FechaCreacion: document.getElementById('receta-fecha').value,
+    Estado: document.getElementById('receta-estado').value,
+    TiempoMaceracionExtractoDias: document.getElementById('receta-maceracion-extracto').value,
+    TiempoReposoMezclaDias: document.getElementById('receta-reposo-mezcla').value,
+    VolumenBatchMl: document.getElementById('receta-volumen').value,
+    TipoProceso: document.getElementById('receta-proceso').value,
+    Notas: document.getElementById('receta-notas').value
+  };
+  if (!data.Nombre) { mostrarToast('Ponele un nombre a la receta.', true); return; }
+  apiCall('saveRecetaHeader', data).then(res => {
+    if (res && res.error) { mostrarToast('Error al guardar: ' + res.error, true); return; }
+    mostrarToast('Receta guardada.');
+    cerrarModal('modal-receta');
+    refrescarDatos();
+    const idGuardado = res && res.ID ? res.ID : data.ID;
+    if (idGuardado && esNueva) {
+      state.recetaActualId = idGuardado;
+      setTimeout(() => abrirDetalleReceta(idGuardado), 400);
+    }
+  });
+}
+
+function eliminarRecetaActual() {
+  const id = state.recetaActualId;
+  if (!id) return;
+  if (!confirm('¿Eliminar esta receta? También se van a borrar todos sus insumos y pasos. Las catas quedan registradas pero sin receta asociada.')) return;
+  apiCall('deleteReceta', { id: id }).then(() => {
+    mostrarToast('Receta eliminada.');
+    cerrarModal('modal-detalle');
+    refrescarDatos();
+  });
+}
+
+function abrirDetalleReceta(id) {
+  state.recetaActualId = id;
+  const r = state.recetas.find(x => String(x.ID) === String(id));
+  document.getElementById('detalle-nombre').textContent = r ? (r.ID + ' · ' + r.Nombre) : id;
+  document.getElementById('detalle-meta').textContent =
+    (r ? [
+      r.TipoProceso, 
+      r.TiempoMaceracionExtractoDias ? 'Extracto: ' + r.TiempoMaceracionExtractoDias + ' días' : '',
+      r.TiempoReposoMezclaDias ? 'Reposo: ' + r.TiempoReposoMezclaDias + ' días' : '',
+      r.VolumenBatchMl ? 'Batch: ' + r.VolumenBatchMl + ' ml' : '',
+      r.Estado
+    ].filter(Boolean).join('  ·  ') : '');
+  document.getElementById('detalle-notas').textContent = r && r.Notas ? r.Notas : '';
+  cambiarSubtabDetalle('items');
+  document.getElementById('lista-items').innerHTML = '<div class="vacio"><span class="spinner"></span>Cargando insumos…</div>';
+  document.getElementById('lista-evaluaciones').innerHTML = '<div class="vacio"><span class="spinner"></span>Cargando catas…</div>';
+  abrirModal('modal-detalle');
+  apiCall('getRecetaDetalle', { id: id }).then(res => {
+    renderItemsReceta(res && res.items ? res.items : []);
+  });
+  apiCall('getEvaluaciones', { recetaId: id }).then(res => {
+    renderEvaluaciones(Array.isArray(res) ? res : []);
+  });
+}
+
+function cambiarSubtabDetalle(nombre) {
+  document.querySelectorAll('#modal-detalle .subpanel').forEach(p => p.classList.remove('activo'));
+  document.querySelectorAll('#modal-detalle .subtab-btn').forEach(b => b.classList.remove('activo'));
+  document.getElementById('subpanel-' + nombre).classList.add('activo');
+  document.querySelector('#modal-detalle .subtab-btn[data-subtab="' + nombre + '"]').classList.add('activo');
+}
+
+function renderItemsReceta(items) {
+  const cont = document.getElementById('lista-items');
+  if (!items.length) {
+    cont.innerHTML = '<div class="vacio">Sin insumos ni pasos cargados todavía.</div>';
+    return;
+  }
+  const insumoMap = {};
+  state.insumos.forEach(i => insumoMap[i.ID] = i);
+  cont.innerHTML = '<table><thead><tr><th>Categoría</th><th>Insumo / paso</th><th>Cant.</th><th>Fase</th><th></th></tr></thead><tbody>' +
+    items.map(it => {
+      const nombre = it.InsumoID ? (insumoMap[it.InsumoID] ? insumoMap[it.InsumoID].Nombre : it.InsumoNombre) : it.InsumoNombre;
+      return '<tr onclick="abrirEdicionItem(\'' + it.ID + '\')" style="cursor:pointer;">' +
+        '<td>' + escapeHtml(it.Categoria || '') + '</td>' +
+        '<td>' + escapeHtml(nombre || '') + (it.Nota ? '<br><span class="subtexto" style="font-size:12px;">' + escapeHtml(it.Nota) + '</span>' : '') + '</td>' +
+        '<td class="num">' + escapeHtml(String(it.Cantidad || '')) + ' ' + escapeHtml(it.Unidad || '') + '</td>' +
+        '<td>' + escapeHtml(it.Fase || '') + '</td>' +
+        '<td></td>' +
+      '</tr>';
+    }).join('') + '</tbody></table>';
+  state._itemsActuales = items;
+}
+
+/* ---- items de receta ---- */
+function poblarSelectInsumos() {
+  const sel = document.getElementById('item-insumo-select');
+  const grupos = {};
+  state.insumos.forEach(i => {
+    const g = i.Clasificacion || 'Otro';
+    if (!grupos[g]) grupos[g] = [];
+    grupos[g].push(i);
+  });
+  sel.innerHTML = Object.keys(grupos).sort().map(g =>
+    '<optgroup label="' + escapeHtml(g) + '">' +
+      grupos[g].map(i => '<option value="' + i.ID + '" data-unidad="' + escapeHtml(i.UnidadMedida || '') + '">' + escapeHtml(i.Nombre) + '</option>').join('') +
+    '</optgroup>'
+  ).join('');
+}
+
+function autocompletarUnidadItem() {
+  const sel = document.getElementById('item-insumo-select');
+  const opt = sel.options[sel.selectedIndex];
+  const unidadInsumo = opt ? (opt.getAttribute('data-unidad') || '') : '';
+  document.getElementById('item-unidad').value = unidadInsumo;
+  const dim = dimensionDe(unidadInsumo);
+  const datalist = document.getElementById('item-unidad-datalist');
+  const inputUnidad = document.getElementById('item-unidad');
+  if (dim && OPCIONES_POR_DIMENSION[dim]) {
+    datalist.innerHTML = OPCIONES_POR_DIMENSION[dim].map(u => '<option value="' + u + '">').join('');
+    inputUnidad.readOnly = false;
+    inputUnidad.title = 'Podés usar cualquier unidad de ' + dim + ' (' + OPCIONES_POR_DIMENSION[dim].join(', ') + ') — se convierte automáticamente.';
+  } else {
+    datalist.innerHTML = '<option value="' + escapeHtml(unidadInsumo) + '">';
+    inputUnidad.readOnly = true;
+    inputUnidad.title = 'Esta es una unidad especial — debe coincidir exactamente con la del insumo.';
+  }
+}
+
+function abrirModalItem(tipo) {
+  document.getElementById('item-id').value = '';
+  document.getElementById('item-tipo').value = tipo;
+  document.getElementById('titulo-modal-item').textContent = tipo === 'insumo' ? 'Agregar insumo' : 'Agregar paso';
+  document.getElementById('item-campos-insumo').style.display = tipo === 'insumo' ? 'block' : 'none';
+  document.getElementById('item-campos-paso').style.display = tipo === 'paso' ? 'block' : 'none';
+  document.getElementById('btn-borrar-item').style.display = 'none';
+  if (tipo === 'insumo') { poblarSelectInsumos(); autocompletarUnidadItem(); }
+  document.getElementById('item-cantidad').value = '';
+  document.getElementById('item-fase').value = '';
+  document.getElementById('item-orden').value = (state._itemsActuales ? state._itemsActuales.length + 1 : 1);
+  document.getElementById('item-nota').value = '';
+  document.getElementById('item-categoria').value = 'BOTÁNICO';
+  document.getElementById('item-paso-nombre').value = '';
+  document.getElementById('item-paso-cantidad').value = '';
+  document.getElementById('item-paso-unidad').value = '';
+  abrirModal('modal-item');
+}
+
+function abrirEdicionItem(itemId) {
+  const it = (state._itemsActuales || []).find(x => String(x.ID) === String(itemId));
+  if (!it) return;
+  const tipo = it.InsumoID ? 'insumo' : 'paso';
+  document.getElementById('item-id').value = it.ID;
+  document.getElementById('item-tipo').value = tipo;
+  document.getElementById('titulo-modal-item').textContent = tipo === 'insumo' ? 'Editar insumo' : 'Editar paso';
+  document.getElementById('item-campos-insumo').style.display = tipo === 'insumo' ? 'block' : 'none';
+  document.getElementById('item-campos-paso').style.display = tipo === 'paso' ? 'block' : 'none';
+  document.getElementById('btn-borrar-item').style.display = 'inline-block';
+  if (tipo === 'insumo') {
+    poblarSelectInsumos();
+    document.getElementById('item-insumo-select').value = it.InsumoID;
+    autocompletarUnidadItem();
+    document.getElementById('item-cantidad').value = it.Cantidad || '';
+    document.getElementById('item-unidad').value = it.Unidad || '';
+  } else {
+    document.getElementById('item-categoria').value = it.Categoria || 'OTRO';
+    document.getElementById('item-paso-nombre').value = it.InsumoNombre || '';
+    document.getElementById('item-paso-cantidad').value = it.Cantidad || '';
+    document.getElementById('item-paso-unidad').value = it.Unidad || '';
+  }
+  document.getElementById('item-fase').value = it.Fase || '';
+  document.getElementById('item-orden').value = it.Orden || '';
+  document.getElementById('item-nota').value = it.Nota || '';
+  abrirModal('modal-item');
+}
+
+function guardarItem() {
+  const tipo = document.getElementById('item-tipo').value;
+  const data = {
+    ID: document.getElementById('item-id').value || undefined,
+    RecetaID: state.recetaActualId,
+    Fase: document.getElementById('item-fase').value,
+    Orden: document.getElementById('item-orden').value,
+    Nota: document.getElementById('item-nota').value
+  };
+  if (tipo === 'insumo') {
+    const sel = document.getElementById('item-insumo-select');
+    const opt = sel.options[sel.selectedIndex];
+    if (!opt) { mostrarToast('Elegí un insumo.', true); return; }
+    data.InsumoID = opt.value;
+    data.InsumoNombre = opt.textContent;
+    const insumo = state.insumos.find(i => i.ID === opt.value);
+    data.Categoria = insumo ? insumo.Clasificacion : '';
+    data.Cantidad = document.getElementById('item-cantidad').value;
+    data.Unidad = document.getElementById('item-unidad').value;
+    if (!data.Cantidad) { mostrarToast('Falta la cantidad.', true); return; }
+  } else {
+    data.InsumoID = '';
+    data.InsumoNombre = document.getElementById('item-paso-nombre').value.trim();
+    data.Categoria = document.getElementById('item-categoria').value;
+    data.Cantidad = document.getElementById('item-paso-cantidad').value;
+    data.Unidad = document.getElementById('item-paso-unidad').value;
+    if (!data.InsumoNombre) { mostrarToast('Describí el paso.', true); return; }
+  }
+  apiCall('saveRecetaItem', data).then(res => {
+    if (res && res.error) { mostrarToast('Error: ' + res.error, true); return; }
+    mostrarToast('Guardado.');
+    cerrarModal('modal-item');
+    apiCall('getRecetaDetalle', { id: state.recetaActualId }).then(r => renderItemsReceta(r.items || []));
+  });
+}
+
+function borrarItemActual() {
+  const id = document.getElementById('item-id').value;
+  if (!id) return;
+  if (!confirm('¿Eliminar este renglón de la receta?')) return;
+  apiCall('deleteRecetaItem', { id: id }).then(() => {
+    mostrarToast('Eliminado.');
+    cerrarModal('modal-item');
+    apiCall('getRecetaDetalle', { id: state.recetaActualId }).then(r => renderItemsReceta(r.items || []));
+  });
+}
+
+/* ============================================================
+   EVALUACIONES / CATAS
+   ============================================================ */
+
+function renderEvaluaciones(evals) {
+  const cont = document.getElementById('lista-evaluaciones');
+  if (!evals.length) {
+    cont.innerHTML = '<div class="vacio">Todavía no hay catas registradas para esta receta.</div>';
+    return;
+  }
+  state._evalActuales = evals;
+  cont.innerHTML = '<table><thead><tr><th>Fecha</th><th>Día</th><th>Formato</th><th class="num">Aroma</th><th class="num">Dulzor</th><th class="num">Amargor</th><th class="num">Cuerpo</th><th class="num">Tomab.</th><th>Domina</th></tr></thead><tbody>' +
+    evals.map(e => '<tr onclick="abrirModalEvaluacion(\'' + e.ID + '\')" style="cursor:pointer;">' +
+      '<td>' + escapeHtml(e.Fecha || '') + '</td>' +
+      '<td>' + escapeHtml(String(e.DiaMaceracion || '')) + '</td>' +
+      '<td>' + escapeHtml(e.Formato || '') + '</td>' +
+      '<td class="num">' + escapeHtml(String(e.Aroma || '')) + '</td>' +
+      '<td class="num">' + escapeHtml(String(e.Dulzor || '')) + '</td>' +
+      '<td class="num">' + escapeHtml(String(e.Amargor || '')) + '</td>' +
+      '<td class="num">' + escapeHtml(String(e.Cuerpo || '')) + '</td>' +
+      '<td class="num">' + escapeHtml(String(e.Tomabilidad || '')) + '</td>' +
+      '<td>' + escapeHtml(e.IngredienteDominante || '') + '</td>' +
+    '</tr>').join('') + '</tbody></table>';
+}
+
+function abrirModalEvaluacion(id) {
+  const e = id ? (state._evalActuales || []).find(x => String(x.ID) === String(id)) : null;
+  document.getElementById('titulo-modal-evaluacion').textContent = e ? 'Editar cata' : 'Nueva cata';
+  document.getElementById('eval-id').value = e ? e.ID : '';
+  document.getElementById('eval-fecha').value = e ? e.Fecha : new Date().toISOString().slice(0, 10);
+  document.getElementById('eval-dia').value = e ? e.DiaMaceracion : '';
+  document.getElementById('eval-formato').value = e ? (e.Formato || 'Pura') : 'Pura';
+  document.getElementById('eval-color').value = e ? e.Color : '';
+  document.getElementById('eval-aroma').value = e ? e.Aroma : '';
+  document.getElementById('eval-dulzor').value = e ? e.Dulzor : '';
+  document.getElementById('eval-amargor').value = e ? e.Amargor : '';
+  document.getElementById('eval-cuerpo').value = e ? e.Cuerpo : '';
+  document.getElementById('eval-tomabilidad').value = e ? e.Tomabilidad : '';
+  document.getElementById('eval-domina').value = e ? e.IngredienteDominante : '';
+  document.getElementById('eval-notas').value = e ? e.NotasCata : '';
+  document.getElementById('btn-borrar-evaluacion').style.display = e ? 'inline-block' : 'none';
+  abrirModal('modal-evaluacion');
+}
+
+function guardarEvaluacion() {
+  const data = {
+    ID: document.getElementById('eval-id').value || undefined,
+    RecetaID: state.recetaActualId,
+    Fecha: document.getElementById('eval-fecha').value,
+    DiaMaceracion: document.getElementById('eval-dia').value,
+    Formato: document.getElementById('eval-formato').value,
+    Color: document.getElementById('eval-color').value,
+    Aroma: document.getElementById('eval-aroma').value,
+    Dulzor: document.getElementById('eval-dulzor').value,
+    Amargor: document.getElementById('eval-amargor').value,
+    Cuerpo: document.getElementById('eval-cuerpo').value,
+    Tomabilidad: document.getElementById('eval-tomabilidad').value,
+    IngredienteDominante: document.getElementById('eval-domina').value,
+    NotasCata: document.getElementById('eval-notas').value
+  };
+  apiCall('saveEvaluacion', data).then(res => {
+    if (res && res.error) { mostrarToast('Error: ' + res.error, true); return; }
+    mostrarToast('Cata guardada.');
+    cerrarModal('modal-evaluacion');
+    apiCall('getEvaluaciones', { recetaId: state.recetaActualId }).then(r => renderEvaluaciones(Array.isArray(r) ? r : []));
+  });
+}
+
+function borrarEvaluacionActual() {
+  const id = document.getElementById('eval-id').value;
+  if (!id) return;
+  if (!confirm('¿Eliminar esta cata?')) return;
+  apiCall('deleteEvaluacion', { id: id }).then(() => {
+    mostrarToast('Eliminada.');
+    cerrarModal('modal-evaluacion');
+    apiCall('getEvaluaciones', { recetaId: state.recetaActualId }).then(r => renderEvaluaciones(Array.isArray(r) ? r : []));
+  });
+}
+
+/* ============================================================
+   INSUMOS
+   ============================================================ */
+
+function renderInsumos() {
+  const cont = document.getElementById('lista-insumos');
+  if (!state.insumos.length) {
+    cont.innerHTML = '<div class="vacio">Todavía no hay insumos cargados. Creá el primero.</div>';
+    return;
+  }
+  const clasificaciones = ['Botánico', 'Azúcar', 'Vino', 'Alcohol fortificante', 'Otro / Base'];
+  let html = '';
+  clasificaciones.forEach(clas => {
+    const items = state.insumos.filter(i => (i.Clasificacion || '') === clas);
+    if (!items.length) return;
+    html += '<div class="grupo-insumos"><h4>' + escapeHtml(clas) + '</h4>';
+    if (clas === 'Botánico') {
+      const subs = ['Agentes de Amargor', 'Herbales', 'Florales', 'Cítricos-Frutales', 'Especiados'];
+      subs.forEach(sub => {
+        const subItems = items.filter(i => (i.Subclasificacion || '') === sub);
+        if (!subItems.length) return;
+        html += '<h5>' + escapeHtml(sub) + '</h5>';
+        html += subItems.map(filaInsumo).join('');
+      });
+      const sinSub = items.filter(i => !subs.includes(i.Subclasificacion || ''));
+      if (sinSub.length) { html += '<h5>Sin subclasificación</h5>' + sinSub.map(filaInsumo).join(''); }
+    } else {
+      html += items.map(filaInsumo).join('');
+    }
+    html += '</div>';
+  });
+  cont.innerHTML = html || '<div class="vacio">Sin insumos.</div>';
+}
+
+function filaInsumo(i) {
+  return '<div class="fila-insumo" onclick="abrirModalInsumo(\'' + i.ID + '\')">' +
+    '<span class="nombre">' + escapeHtml(i.Nombre) +
+      (i.DescripcionEfectos ? '<span class="desc">' + escapeHtml(i.DescripcionEfectos) + '</span>' : '') +
+    '</span>' +
+    '<span class="precio">$' + formatearNumero(i.PrecioPorUnidad) + ' / ' + escapeHtml(i.UnidadMedida || '') + '</span>' +
+  '</div>';
+}
+
+function toggleSubclasificacion() {
+  const clas = document.getElementById('insumo-clasificacion').value;
+  document.getElementById('campo-subclasificacion').style.display = clas === 'Botánico' ? 'block' : 'none';
+}
+
+function abrirModalInsumo(id) {
+  const i = id ? state.insumos.find(x => String(x.ID) === String(id)) : null;
+  document.getElementById('titulo-modal-insumo').textContent = i ? 'Editar insumo' : 'Nuevo insumo';
+  document.getElementById('insumo-id').value = i ? i.ID : '';
+  document.getElementById('insumo-nombre').value = i ? i.Nombre : '';
+  document.getElementById('insumo-clasificacion').value = i ? (i.Clasificacion || 'Botánico') : 'Botánico';
+  toggleSubclasificacion();
+  document.getElementById('insumo-subclasificacion').value = i ? (i.Subclasificacion || 'Agentes de Amargor') : 'Agentes de Amargor';
+  document.getElementById('insumo-unidad').value = i ? i.UnidadMedida : '';
+  document.getElementById('insumo-precio').value = i ? i.PrecioPorUnidad : '';
+  document.getElementById('insumo-stock-minimo').value = i ? (i.StockMinimo || '') : '';
+  document.getElementById('insumo-descripcion').value = i ? i.DescripcionEfectos : '';
+  document.getElementById('insumo-notas').value = i ? i.Notas : '';
+  document.getElementById('btn-borrar-insumo').style.display = i ? 'inline-block' : 'none';
+  document.getElementById('btn-compra-insumo').style.display = i ? 'inline-block' : 'none';
+  document.getElementById('insumo-historial-stock').style.display = i ? 'block' : 'none';
+  document.getElementById('insumo-stock-actual').value = i ? 'Calculando…' : '';
+  if (i) cargarHistorialInsumo(i.ID);
+  abrirModal('modal-insumo');
+}
+
+function guardarInsumo() {
+  const clas = document.getElementById('insumo-clasificacion').value;
+  const data = {
+    ID: document.getElementById('insumo-id').value || undefined,
+    Nombre: document.getElementById('insumo-nombre').value.trim(),
+    Clasificacion: clas,
+    Subclasificacion: clas === 'Botánico' ? document.getElementById('insumo-subclasificacion').value : '',
+    UnidadMedida: document.getElementById('insumo-unidad').value.trim(),
+    PrecioPorUnidad: document.getElementById('insumo-precio').value,
+    StockMinimo: document.getElementById('insumo-stock-minimo').value,
+    DescripcionEfectos: document.getElementById('insumo-descripcion').value,
+    Notas: document.getElementById('insumo-notas').value
+  };
+  if (!data.Nombre) { mostrarToast('Ponele un nombre al insumo.', true); return; }
+  if (!data.UnidadMedida) { mostrarToast('Falta la unidad de medida.', true); return; }
+  apiCall('saveInsumo', data).then(res => {
+    if (res && res.error) { mostrarToast('Error: ' + res.error, true); return; }
+    mostrarToast('Insumo guardado.');
+    cerrarModal('modal-insumo');
+    refrescarDatos();
+  });
+}
+
+function borrarInsumoActual() {
+  const id = document.getElementById('insumo-id').value;
+  if (!id) return;
+  if (!confirm('¿Eliminar este insumo del catálogo? Las recetas que lo usan quedarán sin precio.')) return;
+  apiCall('deleteInsumo', { id: id }).then(() => {
+    mostrarToast('Insumo eliminado.');
+    cerrarModal('modal-insumo');
+    refrescarDatos();
+  });
+}
+
+/* ============================================================
+   CENTRO DE COSTOS
+   ============================================================ */
+
+function renderSelectCostos() {
+  const sel = document.getElementById('select-receta-costos');
+  const actual = sel.value;
+  sel.innerHTML = '<option value="">— Seleccionar receta —</option>' +
+    state.recetas.map(r => '<option value="' + r.ID + '">' + escapeHtml(r.ID + ' · ' + r.Nombre) + '</option>').join('');
+  if (actual) sel.value = actual;
+}
+
+function calcularCostos() {
+  const id = document.getElementById('select-receta-costos').value;
+  const cont = document.getElementById('resultado-costos');
+  if (!id) { cont.innerHTML = ''; return; }
+  cont.innerHTML = '<div class="vacio"><span class="spinner"></span>Calculando…</div>';
+  apiCall('getCentroCostos', { recetaId: id }).then(res => {
+    if (!res || res.error) { cont.innerHTML = '<div class="vacio">No se pudo calcular.</div>'; return; }
+    if (!res.lineas.length) { cont.innerHTML = '<div class="vacio">Esta receta no tiene insumos con costo cargados.</div>'; return; }
+    let html = '<table><thead><tr><th>Insumo</th><th class="num">Cantidad</th><th class="num">Precio unit.</th><th class="num">Costo</th></tr></thead><tbody>';
+    res.lineas.forEach(l => {
+      let celdaCosto;
+      if (!l.unidadesCompatibles) {
+        celdaCosto = '<span class="alerta-unidad" title="La unidad de la receta (' + escapeHtml(l.unidad || '') + ') no es compatible con la unidad del insumo (' + escapeHtml(l.unidadInsumo || '') + '). Ajustá una de las dos.">⚠ unidades incompatibles</span>';
+      } else if (l.sinPrecio) {
+        celdaCosto = '<span class="alerta-unidad" title="Este insumo todavía no tiene precio cargado en el catálogo.">⚠ sin precio</span>';
+      } else {
+        celdaCosto = '$' + formatearNumero(l.costoLinea);
+      }
+      html += '<tr><td>' + escapeHtml(l.insumoNombre) + '</td>' +
+        '<td class="num">' + formatearNumero(l.cantidad) + ' ' + escapeHtml(l.unidad || '') + '</td>' +
+        '<td class="num">$' + formatearNumero(l.precioUnit) + ' / ' + escapeHtml(l.unidadInsumo || '') + '</td>' +
+        '<td class="num' + (!l.unidadesCompatibles || l.sinPrecio ? ' error' : '') + '">' + celdaCosto + '</td></tr>';
+    });
+    html += '</tbody></table>';
+    html += '<div class="resumen-costos">';
+    html += metricaHtml('Costo total del batch', '$' + formatearNumero(res.costoTotal));
+    if (res.volumenBatchMl) {
+      html += metricaHtml('Costo por litro', '$' + formatearNumero(res.costoPorLitro));
+      html += metricaHtml('Costo por copa (100ml)', '$' + formatearNumero(res.costoPorCopa100ml));
+      html += metricaHtml('Costo por botella (750ml)', '$' + formatearNumero(res.costoPorBotella750ml));
+    }
+    html += '</div>';
+    if (!res.volumenBatchMl) {
+      html += '<p class="subtexto" style="margin-top:12px;">Cargá el volumen del batch en los datos de la receta para ver el costo por litro, copa y botella.</p>';
+    }
+    cont.innerHTML = html;
+  });
+}
+
+function metricaHtml(label, valor) {
+  return '<div class="metrica"><div class="label">' + escapeHtml(label) + '</div><div class="valor">' + valor + '</div></div>';
+}
+
+/* ============================================================
+   STOCK / INVENTARIO
+   ============================================================ */
+
+function cargarStock() {
+  const cont = document.getElementById('stock-contenido');
+  cont.innerHTML = '<div class="vacio"><span class="spinner"></span>Calculando stock…</div>';
+  apiCall('getStock').then(res => {
+    if (!Array.isArray(res)) { cont.innerHTML = '<div class="vacio">No se pudo cargar el stock.</div>'; return; }
+    state._stockActual = res;
+    renderStock(res);
+  });
+}
+
+function claseUrgencia(item) {
+  if (item.stockMinimo <= 0) return 'sinumbral';
+  if (item.urgencia < 1) return 'critico';
+  if (item.urgencia < 2) return 'atencion';
+  return 'ok';
+}
+
+function textoUrgencia(item) {
+  const c = claseUrgencia(item);
+  if (c === 'sinumbral') return 'Sin umbral';
+  if (c === 'critico') return 'Crítico';
+  if (c === 'atencion') return 'Atención';
+  return 'Ok';
+}
+
+function renderStock(items) {
+  const cont = document.getElementById('stock-contenido');
+  if (!items.length) { cont.innerHTML = '<div class="vacio">Todavía no hay insumos cargados.</div>'; return; }
+
+  const conUmbral = items.filter(i => i.stockMinimo > 0).sort((a, b) => a.urgencia - b.urgencia);
+  const sinUmbral = items.filter(i => i.stockMinimo <= 0).sort((a, b) => a.stockActual - b.stockActual);
+
+  let html = '';
+  if (conUmbral.length) {
+    html += '<div class="stock-grupo-titulo">Con umbral definido — más urgente primero</div>';
+    html += conUmbral.map(filaStock).join('');
+  }
+  if (sinUmbral.length) {
+    html += '<div class="stock-grupo-titulo">Sin umbral definido</div>';
+    html += '<p class="subtexto" style="margin:-4px 0 10px;">Entrá al insumo y cargale un stock mínimo para verlo comparado acá arriba.</p>';
+    html += sinUmbral.map(filaStock).join('');
+  }
+  cont.innerHTML = html;
+}
+
+function filaStock(item) {
+  const clase = claseUrgencia(item);
+  const ancho = item.stockMinimo > 0
+    ? Math.max(3, Math.min(100, (item.stockActual / (item.stockMinimo * 2)) * 100))
+    : Math.max(3, Math.min(100, item.stockActual > 0 ? 40 : 3));
+  const advertencia = item.movimientosIncompatibles
+    ? ' <span class="alerta-unidad" title="Hay ' + item.movimientosIncompatibles + ' movimiento(s) con unidad incompatible que no se sumaron. Revisalos.">⚠</span>'
+    : '';
+  return '<div class="stock-fila" onclick="abrirModalInsumo(\'' + item.insumoId + '\')">' +
+    '<div>' +
+      '<div class="nombre-cant">' +
+        '<span class="nom">' + escapeHtml(item.nombre) + advertencia + '</span>' +
+        '<span class="cant">' + formatearNumero(item.stockActual) + ' ' + escapeHtml(item.unidad || '') +
+          (item.stockMinimo > 0 ? ' <span style="opacity:.6;">/ mín. ' + formatearNumero(item.stockMinimo) + '</span>' : '') +
+        '</span>' +
+      '</div>' +
+      '<div class="stock-barra-fondo"><div class="stock-barra-fill ' + clase + '" style="width:' + ancho + '%;"></div></div>' +
+    '</div>' +
+    '<div class="stock-etiqueta ' + clase + '">' + textoUrgencia(item) + '</div>' +
+  '</div>';
+}
+
+/* ---- modal compra / ajuste ---- */
+function abrirModalCompra() {
+  const id = document.getElementById('insumo-id').value;
+  const insumo = state.insumos.find(i => String(i.ID) === String(id));
+  if (!insumo) return;
+  document.getElementById('titulo-modal-compra').textContent = 'Registrar compra';
+  document.getElementById('compra-tipo').value = 'Compra';
+  document.getElementById('compra-insumo-id').value = id;
+  document.getElementById('compra-insumo-nombre').textContent = insumo.Nombre;
+  document.getElementById('compra-fecha').value = new Date().toISOString().slice(0, 10);
+  document.getElementById('compra-cantidad').value = '';
+  document.getElementById('compra-unidad').value = insumo.UnidadMedida || '';
+  const dim = dimensionDe(insumo.UnidadMedida);
+  document.getElementById('compra-unidad-datalist').innerHTML = dim && OPCIONES_POR_DIMENSION[dim]
+    ? OPCIONES_POR_DIMENSION[dim].map(u => '<option value="' + u + '">').join('')
+    : '<option value="' + escapeHtml(insumo.UnidadMedida || '') + '">';
+  document.getElementById('compra-nota').value = '';
+  cerrarModal('modal-insumo');
+  abrirModal('modal-compra');
+}
+
+function guardarCompraOAjuste() {
+  const data = {
+    InsumoID: document.getElementById('compra-insumo-id').value,
+    Fecha: document.getElementById('compra-fecha').value,
+    Cantidad: document.getElementById('compra-cantidad').value,
+    Unidad: document.getElementById('compra-unidad').value,
+    Nota: document.getElementById('compra-nota').value
+  };
+  if (!data.Cantidad) { mostrarToast('Falta la cantidad.', true); return; }
+  const accion = document.getElementById('compra-tipo').value === 'Ajuste' ? 'registrarAjuste' : 'registrarCompra';
+  apiCall(accion, data).then(res => {
+    if (res && res.error) { mostrarToast('Error: ' + res.error, true); return; }
+    mostrarToast('Movimiento registrado.');
+    cerrarModal('modal-compra');
+    cargarStock();
+  });
+}
+
+/* ---- historial dentro del modal insumo ---- */
+function cargarHistorialInsumo(insumoId) {
+  const cont = document.getElementById('insumo-historial-lista');
+  cont.innerHTML = '<div class="vacio" style="padding:10px;"><span class="spinner"></span></div>';
+  apiCall('getMovimientosInsumo', { insumoId: insumoId }).then(res => {
+    const lista = Array.isArray(res) ? res : [];
+    if (!lista.length) { cont.innerHTML = '<div class="vacio" style="padding:10px;">Sin movimientos todavía.</div>'; return; }
+    cont.innerHTML = lista.slice().reverse().map(m => {
+      const signo = Number(m.Cantidad) > 0 ? '+' : '';
+      return '<div style="display:flex; justify-content:space-between; font-size:13px; padding:5px 0; border-bottom:1px solid var(--linea);">' +
+        '<span>' + escapeHtml(m.Fecha || '') + ' · ' + escapeHtml(m.Tipo || '') + (m.Nota ? ' — ' + escapeHtml(m.Nota) : '') + '</span>' +
+        '<span style="font-variant-numeric:tabular-nums;">' + signo + formatearNumero(m.Cantidad) + ' ' + escapeHtml(m.Unidad || '') + '</span>' +
+      '</div>';
+    }).join('');
+  });
+  apiCall('getStock').then(res => {
+    const item = (Array.isArray(res) ? res : []).find(x => String(x.insumoId) === String(insumoId));
+    document.getElementById('insumo-stock-actual').value = item ? (formatearNumero(item.stockActual) + ' ' + (item.unidad || '')) : '—';
+  });
+}
+
+/* ---------------- utilidades ---------------- */
+function escapeHtml(str) {
+  return String(str == null ? '' : str)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+function formatearNumero(n) {
+  const num = Number(n);
+  if (isNaN(num)) return '0';
+  return num.toLocaleString('es-AR', { maximumFractionDigits: 2 });
+}
+</script>
+</body>
+</html>

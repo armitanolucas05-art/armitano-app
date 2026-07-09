@@ -359,7 +359,7 @@ td.num.error{color:var(--rojo-claro);}
     <div class="campo-fila">
       <div><label>Fecha de creación</label><input type="date" id="receta-fecha"></div>
       <div><label>Estado</label>
-        <select id="receta-estado">
+        <select id="receta-estado" onchange="onCambioEstadoReceta()">
           <option>Teórica</option>
           <option>En maceración</option>
           <option>Embotellada</option>
@@ -367,6 +367,10 @@ td.num.error{color:var(--rojo-claro);}
           <option>Evaluada</option>
         </select>
       </div>
+    </div>
+    <div class="campo-fila">
+      <div><label>Fecha de inicio de maceración</label><input type="date" id="receta-fecha-inicio-maceracion"></div>
+      <div class="subtexto" style="align-self:end; padding-bottom:12px;">Se completa sola al pasar a "En maceración". Los días de extracto/reposo cuentan desde acá, no desde la fecha de creación.</div>
     </div>
     <div class="campo-fila">
       <div><label>Maceración extracto botánico (días)</label><input type="number" id="receta-maceracion-extracto" placeholder="Ej. 5"></div>
@@ -734,9 +738,19 @@ function abrirModal(id) { document.getElementById(id).classList.add('activo'); }
    RECETAS
    ============================================================ */
 
+function onCambioEstadoReceta() {
+  const estado = document.getElementById('receta-estado').value;
+  const campoInicio = document.getElementById('receta-fecha-inicio-maceracion');
+  if (estado !== 'Teórica' && !campoInicio.value) {
+    campoInicio.value = new Date().toISOString().slice(0, 10);
+  }
+}
+
 function calcularProximoPaso(r) {
-  if (!r.FechaCreacion) return null;
-  const inicio = new Date(r.FechaCreacion + 'T00:00:00');
+  if (!r.Estado || r.Estado === 'Teórica') return null;
+  const fechaBase = r.FechaInicioMaceracion || r.FechaCreacion;
+  if (!fechaBase) return null;
+  const inicio = new Date(fechaBase + 'T00:00:00');
   if (isNaN(inicio.getTime())) return null;
   const extracto = Number(r.TiempoMaceracionExtractoDias) || 0;
   const reposo = Number(r.TiempoReposoMezclaDias) || 0;
@@ -784,6 +798,7 @@ function abrirModalReceta() {
   document.getElementById('receta-nombre').value = '';
   document.getElementById('receta-fecha').value = new Date().toISOString().slice(0, 10);
   document.getElementById('receta-estado').value = 'Teórica';
+  document.getElementById('receta-fecha-inicio-maceracion').value = '';
   document.getElementById('receta-maceracion-extracto').value = '';
   document.getElementById('receta-reposo-mezcla').value = '';
   document.getElementById('receta-volumen').value = '';
@@ -802,6 +817,7 @@ function editarRecetaActual() {
   document.getElementById('receta-nombre').value = r.Nombre || '';
   document.getElementById('receta-fecha').value = r.FechaCreacion || '';
   document.getElementById('receta-estado').value = r.Estado || 'Teórica';
+  document.getElementById('receta-fecha-inicio-maceracion').value = r.FechaInicioMaceracion || '';
   document.getElementById('receta-maceracion-extracto').value = r.TiempoMaceracionExtractoDias || '';
   document.getElementById('receta-reposo-mezcla').value = r.TiempoReposoMezclaDias || '';
   document.getElementById('receta-volumen').value = r.VolumenBatchMl || '';
@@ -818,6 +834,7 @@ function guardarReceta() {
     Nombre: document.getElementById('receta-nombre').value.trim(),
     FechaCreacion: document.getElementById('receta-fecha').value,
     Estado: document.getElementById('receta-estado').value,
+    FechaInicioMaceracion: document.getElementById('receta-fecha-inicio-maceracion').value,
     TiempoMaceracionExtractoDias: document.getElementById('receta-maceracion-extracto').value,
     TiempoReposoMezclaDias: document.getElementById('receta-reposo-mezcla').value,
     VolumenBatchMl: document.getElementById('receta-volumen').value,

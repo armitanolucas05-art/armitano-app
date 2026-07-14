@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ARMITANO · Cata</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=EB+Garamond:ital,wght@0,400;0,600;1,400&display=swap');
+
+:root{
+  --negro:#0b0a08; --panel:#161310; --panel-2:#1f1a14; --linea:#3a3226;
+  --dorado:#c9a961; --dorado-brillante:#e8d39a; --rojo:#7a1f2b; --rojo-claro:#a8394a;
+  --hueso:#e8e2d4; --hueso-muted:#9a9080; --radius:6px;
+}
+*{box-sizing:border-box;}
+body{
+  margin:0; background:var(--negro); color:var(--hueso);
+  font-family:'EB Garamond', Georgia, serif; min-height:100vh;
+}
+.wrap{max-width:480px; margin:0 auto; padding:32px 20px 60px;}
+.marca{text-align:center; margin-bottom:20px;}
+.sello{
+  width:44px; height:44px; border-radius:50%; background:var(--rojo); border:2px solid var(--dorado);
+  display:flex; align-items:center; justify-content:center; font-family:'Cormorant Garamond', serif;
+  font-weight:700; font-size:19px; color:var(--dorado-brillante); margin:0 auto 10px;
+}
+h1{font-family:'Cormorant Garamond', serif; font-size:32px; letter-spacing:4px; color:var(--dorado); text-align:center; margin:0; text-transform:uppercase;}
+.lema{font-size:12px; letter-spacing:2px; color:var(--hueso-muted); text-align:center; text-transform:uppercase; margin-top:6px;}
+.panel{background:var(--panel); border:1px solid var(--linea); border-radius:8px; padding:22px; margin-top:24px;}
+.receta-titulo{color:var(--dorado-brillante); font-size:22px; text-align:center; margin:0 0 4px;}
+.receta-sub{color:var(--hueso-muted); font-size:13px; text-align:center; margin-bottom:20px;}
+label{display:block; font-size:13px; color:var(--hueso-muted); margin-bottom:4px;}
+input,select,textarea{
+  width:100%; background:var(--panel-2); border:1px solid var(--linea); color:var(--hueso);
+  padding:10px; border-radius:var(--radius); font-family:'EB Garamond', serif; font-size:16px; margin-bottom:14px;
+}
+textarea{min-height:70px; resize:vertical;}
+.campo-fila{display:grid; grid-template-columns:1fr 1fr; gap:12px;}
+.campo-fila-3{display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px;}
+button{
+  width:100%; background:var(--rojo); border:1px solid var(--dorado); color:#fff;
+  padding:13px; border-radius:var(--radius); font-family:'EB Garamond', serif; font-size:17px;
+  cursor:pointer; margin-top:6px;
+}
+button:active{background:var(--rojo-claro);}
+.vacio{text-align:center; color:var(--hueso-muted); padding:30px 10px; font-style:italic;}
+.gracias{text-align:center; padding:20px 10px;}
+.gracias h2{color:var(--dorado); font-family:'Cormorant Garamond', serif; font-size:26px;}
+.error{color:var(--rojo-claro); text-align:center; padding:20px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="marca">
+    <div class="sello">A</div>
+    <h1>Armitano</h1>
+    <div class="lema">Calidad · Prudencia · Vínculo</div>
+  </div>
+
+  <div class="panel" id="panel-principal">
+    <div class="vacio">Cargando…</div>
+  </div>
+</div>
+
+<script>
+// ==== CONFIGURACIÓN ====
+// Si vas a compartir este link con invitados, pegá acá la URL de tu Apps Script
+// (la que termina en /exec). Si la dejás vacía, intenta usar la que ya tengas
+// guardada en este navegador (solo sirve si abrís este link vos mismo, en tu propio dispositivo).
+const SCRIPT_URL_FIJA = '';
+
+const SCRIPT_URL = SCRIPT_URL_FIJA || localStorage.getItem('armitano_script_url') || '';
+
+function apiCall(action, payload) {
+  payload = payload || {};
+  return new Promise((resolve) => {
+    if (!SCRIPT_URL) { resolve({ error: 'no_url' }); return; }
+    const cb = 'cb_' + Date.now() + '_' + Math.floor(Math.random() * 100000);
+    let resuelto = false;
+    window[cb] = (data) => { if (!resuelto) { resuelto = true; delete window[cb]; resolve(data); } };
+    const url = SCRIPT_URL + '?action=' + encodeURIComponent(action) +
+      '&data=' + encodeURIComponent(JSON.stringify(payload)) + '&callback=' + cb;
+    const s = document.createElement('script');
+    s.src = url;
+    s.onerror = () => { if (!resuelto) { resuelto = true; resolve({ error: 'network' }); delete window[cb]; } };
+    document.head.appendChild(s);
+    setTimeout(() => { if (!resuelto) { resuelto = true; resolve({ error: 'timeout' }); delete window[cb]; } }, 20000);
+  });
+}
+
+function escapeHtml(str) {
+  return String(str == null ? '' : str)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+const params = new URLSearchParams(window.location.search);
+const recetaId = params.get('receta');
+const panel = document.getElementById('panel-principal');
+
+function init() {
+  if (!SCRIPT_URL) {
+    panel.innerHTML = '<div class="error">Este formulario todavía no está conectado a la base de datos. (Falta configurar la URL del Apps Script en cata.html)</div>';
+    return;
+  }
+  if (!recetaId) {
+    panel.innerHTML = '<div class="error">Falta indicar qué receta se está catando. Pedí el link o QR correcto.</div>';
+    return;
+  }
+  apiCall('getRecetaDetalle', { id: recetaId }).then(res => {
+    const receta = res && res.header;
+    if (!receta) {
+      panel.innerHTML = '<div class="error">No se encontró esa receta.</div>';
+      return;
+    }
+    renderFormulario(receta);
+  });
+}
+
+function renderFormulario(receta) {
+  panel.innerHTML =
+    '<p class="receta-titulo">' + escapeHtml(receta.ID) + ' · ' + escapeHtml(receta.Nombre || '') + '</p>' +
+    '<p class="receta-sub">Contanos qué te pareció</p>' +
+    '<label>Tu nombre</label>' +
+    '<input type="text" id="f-catador" placeholder="¿Quién está catando?">' +
+    '<div class="campo-fila">' +
+      '<div><label>Formato</label><select id="f-formato"><option>Pura</option><option>Tónica</option><option>Soda</option><option>Otro</option></select></div>' +
+      '<div><label>Color</label><input type="text" id="f-color" placeholder="Ej. Ámbar claro"></div>' +
+    '</div>' +
+    '<div class="campo-fila-3">' +
+      '<div><label>Aroma (1–5)</label><input type="number" min="1" max="5" id="f-aroma"></div>' +
+      '<div><label>Dulzor (1–5)</label><input type="number" min="1" max="5" id="f-dulzor"></div>' +
+      '<div><label>Amargor (1–5)</label><input type="number" min="1" max="5" id="f-amargor"></div>' +
+    '</div>' +
+    '<div class="campo-fila">' +
+      '<div><label>Cuerpo (1–5)</label><input type="number" min="1" max="5" id="f-cuerpo"></div>' +
+      '<div><label>Tomabilidad (1–5)</label><input type="number" min="1" max="5" id="f-tomabilidad"></div>' +
+    '</div>' +
+    '<label>¿Sentís que domina algún ingrediente?</label>' +
+    '<input type="text" id="f-domina" placeholder="Ej. Pomelo, canela…">' +
+    '<label>Notas</label>' +
+    '<textarea id="f-notas" placeholder="Lo que se te ocurra…"></textarea>' +
+    '<button onclick="enviarCata(\'' + receta.ID + '\')">Enviar cata</button>';
+}
+
+function enviarCata(recetaId) {
+  const data = {
+    RecetaID: recetaId,
+    Catador: document.getElementById('f-catador').value,
+    Fecha: new Date().toISOString().slice(0, 10),
+    Formato: document.getElementById('f-formato').value,
+    Color: document.getElementById('f-color').value,
+    Aroma: document.getElementById('f-aroma').value,
+    Dulzor: document.getElementById('f-dulzor').value,
+    Amargor: document.getElementById('f-amargor').value,
+    Cuerpo: document.getElementById('f-cuerpo').value,
+    Tomabilidad: document.getElementById('f-tomabilidad').value,
+    IngredienteDominante: document.getElementById('f-domina').value,
+    NotasCata: document.getElementById('f-notas').value
+  };
+  panel.innerHTML = '<div class="vacio">Enviando…</div>';
+  apiCall('saveEvaluacion', data).then(res => {
+    if (res && res.error) {
+      panel.innerHTML = '<div class="error">Hubo un problema al enviar. Probá de nuevo.</div>';
+      return;
+    }
+    panel.innerHTML = '<div class="gracias"><h2>¡Gracias!</h2><p>Tu cata quedó registrada.</p></div>';
+  });
+}
+
+init();
+</script>
+</body>
+</html>

@@ -67,7 +67,7 @@ button:active{background:var(--rojo-claro);}
 // Si vas a compartir este link con invitados, pegá acá la URL de tu Apps Script
 // (la que termina en /exec). Si la dejás vacía, intenta usar la que ya tengas
 // guardada en este navegador (solo sirve si abrís este link vos mismo, en tu propio dispositivo).
-const SCRIPT_URL_FIJA = '';
+const SCRIPT_URL_FIJA = 'https://script.google.com/macros/s/AKfycbxHJGHRR-RW3gjcfAlKaEJwxjXB7E-ysjzsf7Wps29W3HXewMdz-HqW0oXYWr45szr4AQ/exec';
 
 const SCRIPT_URL = SCRIPT_URL_FIJA || localStorage.getItem('armitano_script_url') || '';
 

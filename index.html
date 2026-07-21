@@ -139,6 +139,12 @@ button{font-family:'EB Garamond', serif;}
   color:var(--dorado-brillante); font-size:12px; margin-top:10px; padding-top:8px;
   border-top:1px solid var(--linea);
 }
+.proximo-paso.ok{color:var(--ok);}
+.proximo-paso-detalle{
+  background:var(--panel-2); border:1px solid var(--linea); border-radius:var(--radius);
+  padding:12px 14px; font-size:14px;
+}
+.proximo-paso-detalle.ok{border-color:var(--ok); color:var(--ok);}
 
 /* ---------- formularios ---------- */
 label{display:block; font-size:13px; color:var(--hueso-muted); margin-bottom:4px; letter-spacing:.5px;}
@@ -439,6 +445,11 @@ td.num.error{color:var(--rojo-claro);}
       <div class="subtexto" style="align-self:end; padding-bottom:12px;">Se completa sola al pasar a "En maceración". Los días de extracto/reposo cuentan desde acá, no desde la fecha de creación.</div>
     </div>
     <div class="campo-fila">
+      <div><label>Fecha real — extracto filtrado</label><input type="date" id="receta-fecha-fin-extracto"></div>
+      <div><label>Fecha real — fin del reposo</label><input type="date" id="receta-fecha-fin-reposo"></div>
+    </div>
+    <p class="subtexto" style="margin-top:-8px;">Estas dos se completan con el botón "Marcar como hecho" del detalle de la receta — el "próximo paso" no avanza solo, espera a que confirmes cada etapa. Podés corregirlas acá a mano si hace falta.</p>
+    <div class="campo-fila">
       <div><label>Maceración extracto botánico (días)</label><input type="number" id="receta-maceracion-extracto" placeholder="Ej. 5"></div>
       <div><label>Reposo tras mezcla (días)</label><input type="number" id="receta-reposo-mezcla" placeholder="Ej. 5"></div>
     </div>
@@ -474,6 +485,7 @@ td.num.error{color:var(--rojo-claro);}
         <option>Evaluada</option>
       </select>
     </div>
+    <div id="detalle-proximo-paso" style="margin-bottom:14px;"></div>
     <div id="detalle-notas" class="subtexto" style="margin-bottom:18px;"></div>
 
     <div class="subtabs">
@@ -482,6 +494,7 @@ td.num.error{color:var(--rojo-claro);}
     </div>
 
     <div id="subpanel-items" class="subpanel activo">
+      <div id="resumen-balance-batch" style="margin-bottom:16px;"></div>
       <div style="display:flex; justify-content:flex-end; gap:8px; margin-bottom:6px;">
         <button class="btn btn-sm" onclick="abrirModalItem('insumo')">+ Insumo</button>
         <button class="btn btn-sm" onclick="abrirModalItem('paso')">+ Paso</button>
@@ -653,7 +666,7 @@ td.num.error{color:var(--rojo-claro);}
     <div class="campo-fila">
       <div>
         <label>Clasificación</label>
-        <select id="insumo-clasificacion" onchange="toggleSubclasificacion()">
+        <select id="insumo-clasificacion" onchange="toggleCamposPorClasificacion()">
           <option>Botánico</option>
           <option>Azúcar</option>
           <option>Vino</option>
@@ -670,6 +683,10 @@ td.num.error{color:var(--rojo-claro);}
           <option>Cítricos-Frutales</option>
           <option>Especiados</option>
         </select>
+      </div>
+      <div id="campo-grado-alcoholico" style="display:none;">
+        <label>Grado alcohólico (%)</label>
+        <input type="number" step="any" id="insumo-grado-alcoholico" placeholder="Ej. 12.1">
       </div>
     </div>
     <div class="campo-fila">
@@ -761,6 +778,14 @@ function normalizarUnidad(u) {
 function dimensionDe(u) {
   const n = normalizarUnidad(u);
   return UNIDADES_INFO[n] || null;
+}
+const FACTOR_UNIDAD = {
+  g:1, gr:1, gramo:1, gramos:1, kg:1000, kilo:1000, kilogramo:1000, kilogramos:1000,
+  ml:1, mililitro:1, mililitros:1, cc:1, l:1000, lt:1000, litro:1000, litros:1000,
+  unidad:1, unidades:1, u:1, gota:1, gotas:1
+};
+function factorUnidad(u) {
+  return FACTOR_UNIDAD[normalizarUnidad(u)] || 1;
 }
 
 /* ---------------- API (JSONP) ---------------- */
@@ -889,23 +914,40 @@ function onCambioEstadoReceta() {
 
 function calcularProximoPaso(r) {
   if (!r.Estado || r.Estado === 'Teórica') return null;
-  const fechaBase = r.FechaInicioMaceracion || r.FechaCreacion;
-  if (!fechaBase) return null;
-  const inicio = new Date(fechaBase + 'T00:00:00');
+  if (!r.FechaInicioMaceracion) return null;
+  const inicio = new Date(r.FechaInicioMaceracion + 'T00:00:00');
   if (isNaN(inicio.getTime())) return null;
-  const extracto = Number(r.TiempoMaceracionExtractoDias) || 0;
-  const reposo = Number(r.TiempoReposoMezclaDias) || 0;
-  if (!extracto && !reposo) return null;
-  const fechaFiltrado = new Date(inicio); fechaFiltrado.setDate(fechaFiltrado.getDate() + extracto);
-  const fechaLista = new Date(fechaFiltrado); fechaLista.setDate(fechaLista.getDate() + reposo);
+  const extractoDias = Number(r.TiempoMaceracionExtractoDias) || 0;
+  const reposoDias = Number(r.TiempoReposoMezclaDias) || 0;
   const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
-  if (extracto > 0 && hoy < fechaFiltrado) {
-    return { texto: 'Filtrar extracto botánico', fecha: fechaFiltrado };
+
+  // Etapa 1: filtrar el extracto botánico — no avanza sola, espera confirmación manual
+  if (!r.FechaFinExtracto) {
+    if (!extractoDias) return null;
+    const fechaEstim = new Date(inicio); fechaEstim.setDate(fechaEstim.getDate() + extractoDias);
+    const diasRestantes = Math.round((fechaEstim - hoy) / 86400000);
+    return { paso: 'extracto', texto: 'Filtrar extracto botánico', fecha: fechaEstim, diasRestantes: diasRestantes };
   }
-  if (reposo > 0 && hoy < fechaLista) {
-    return { texto: 'Fin del reposo — lista', fecha: fechaLista };
+
+  // Etapa 2: fin del reposo — arranca a contar recién desde que se confirmó la etapa 1
+  const finExtracto = new Date(r.FechaFinExtracto + 'T00:00:00');
+  if (!r.FechaFinReposo) {
+    if (!reposoDias) return null;
+    const fechaEstim = new Date(finExtracto); fechaEstim.setDate(fechaEstim.getDate() + reposoDias);
+    const diasRestantes = Math.round((fechaEstim - hoy) / 86400000);
+    return { paso: 'reposo', texto: 'Fin del reposo', fecha: fechaEstim, diasRestantes: diasRestantes };
   }
-  return { texto: 'Lista para evaluar', fecha: fechaLista };
+
+  // Ambas etapas confirmadas: lista, con los días reales totales
+  const finReposo = new Date(r.FechaFinReposo + 'T00:00:00');
+  const diasRealesTotal = Math.round((finReposo - inicio) / 86400000);
+  return { paso: 'lista', texto: 'Lista para evaluar', fecha: finReposo, diasRealesTotal: diasRealesTotal };
+}
+
+function formatDiasRestantes(n) {
+  if (n > 0) return 'faltan ' + n + ' día' + (n === 1 ? '' : 's');
+  if (n === 0) return 'hoy';
+  return 'atrasado ' + Math.abs(n) + ' día' + (Math.abs(n) === 1 ? '' : 's');
 }
 
 function renderRecetas() {
@@ -917,6 +959,12 @@ function renderRecetas() {
   cont.innerHTML = state.recetas.map(r => {
     const estadoClase = (r.Estado || '').toLowerCase().replace(/\s+/g, '');
     const proximo = calcularProximoPaso(r);
+    let lineaProximo = '';
+    if (proximo && proximo.paso === 'lista') {
+      lineaProximo = '<div class="proximo-paso ok">✓ Lista para evaluar — ' + proximo.diasRealesTotal + ' días reales</div>';
+    } else if (proximo) {
+      lineaProximo = '<div class="proximo-paso">→ ' + escapeHtml(proximo.texto) + ' — ' + formatDiasRestantes(proximo.diasRestantes) + '</div>';
+    }
     return '<div class="card-receta" onclick="abrirDetalleReceta(\'' + r.ID + '\')">' +
       '<div class="id">' + (r.ID || '') + '</div>' +
       '<h3>' + escapeHtml(r.Nombre || 'Sin nombre') + '</h3>' +
@@ -926,7 +974,7 @@ function renderRecetas() {
         (r.VolumenBatchMl ? 'Batch: ' + r.VolumenBatchMl + ' ml' : '') +
       '</div>' +
       (r.Estado ? '<span class="estado-badge ' + estadoClase + '">' + escapeHtml(r.Estado) + '</span>' : '') +
-      (proximo ? '<div class="proximo-paso">→ ' + escapeHtml(proximo.texto) + ' — ' + proximo.fecha.toLocaleDateString('es-AR') + '</div>' : '') +
+      lineaProximo +
     '</div>';
   }).join('');
 }
@@ -940,6 +988,8 @@ function abrirModalReceta() {
   document.getElementById('receta-fecha').value = new Date().toISOString().slice(0, 10);
   document.getElementById('receta-estado').value = 'Teórica';
   document.getElementById('receta-fecha-inicio-maceracion').value = '';
+  document.getElementById('receta-fecha-fin-extracto').value = '';
+  document.getElementById('receta-fecha-fin-reposo').value = '';
   document.getElementById('receta-maceracion-extracto').value = '';
   document.getElementById('receta-reposo-mezcla').value = '';
   document.getElementById('receta-volumen').value = '';
@@ -959,6 +1009,8 @@ function editarRecetaActual() {
   document.getElementById('receta-fecha').value = r.FechaCreacion || '';
   document.getElementById('receta-estado').value = r.Estado || 'Teórica';
   document.getElementById('receta-fecha-inicio-maceracion').value = r.FechaInicioMaceracion || '';
+  document.getElementById('receta-fecha-fin-extracto').value = r.FechaFinExtracto || '';
+  document.getElementById('receta-fecha-fin-reposo').value = r.FechaFinReposo || '';
   document.getElementById('receta-maceracion-extracto').value = r.TiempoMaceracionExtractoDias || '';
   document.getElementById('receta-reposo-mezcla').value = r.TiempoReposoMezclaDias || '';
   document.getElementById('receta-volumen').value = r.VolumenBatchMl || '';
@@ -976,6 +1028,8 @@ function guardarReceta() {
     FechaCreacion: document.getElementById('receta-fecha').value,
     Estado: document.getElementById('receta-estado').value,
     FechaInicioMaceracion: document.getElementById('receta-fecha-inicio-maceracion').value,
+    FechaFinExtracto: document.getElementById('receta-fecha-fin-extracto').value,
+    FechaFinReposo: document.getElementById('receta-fecha-fin-reposo').value,
     TiempoMaceracionExtractoDias: document.getElementById('receta-maceracion-extracto').value,
     TiempoReposoMezclaDias: document.getElementById('receta-reposo-mezcla').value,
     VolumenBatchMl: document.getElementById('receta-volumen').value,
@@ -1007,6 +1061,43 @@ function eliminarRecetaActual() {
   });
 }
 
+function renderDetalleProximoPaso(r) {
+  const cont = document.getElementById('detalle-proximo-paso');
+  if (!cont) return;
+  const p = calcularProximoPaso(r);
+  if (!p) { cont.innerHTML = ''; return; }
+  if (p.paso === 'lista') {
+    cont.innerHTML = '<div class="proximo-paso-detalle ok">✓ Lista para evaluar desde ' + p.fecha.toLocaleDateString('es-AR') + ' — ' + p.diasRealesTotal + ' días reales de maceración total.</div>';
+    return;
+  }
+  cont.innerHTML =
+    '<div class="proximo-paso-detalle">' +
+      '<div>→ ' + escapeHtml(p.texto) + ' — <strong>' + formatDiasRestantes(p.diasRestantes) + '</strong> (estimado ' + p.fecha.toLocaleDateString('es-AR') + ')</div>' +
+      '<div style="margin-top:10px; display:flex; gap:8px; align-items:center; flex-wrap:wrap;">' +
+        '<input type="date" id="fecha-marcar-paso" value="' + new Date().toISOString().slice(0, 10) + '" style="width:auto; margin:0;">' +
+        '<button class="btn btn-sm" onclick="marcarPasoHecho(\'' + p.paso + '\')">Marcar como hecho</button>' +
+      '</div>' +
+    '</div>';
+}
+
+function marcarPasoHecho(paso) {
+  const r = state.recetas.find(x => String(x.ID) === String(state.recetaActualId));
+  if (!r) return;
+  const fecha = document.getElementById('fecha-marcar-paso').value || new Date().toISOString().slice(0, 10);
+  const payload = { ID: r.ID };
+  if (paso === 'extracto') payload.FechaFinExtracto = fecha;
+  if (paso === 'reposo') payload.FechaFinReposo = fecha;
+  apiCall('saveRecetaHeader', payload).then(res => {
+    if (res && res.error) { mostrarToast('Error: ' + res.error, true); return; }
+    mostrarToast('Paso registrado.');
+    refrescarDatos();
+    setTimeout(() => {
+      const nr = state.recetas.find(x => String(x.ID) === String(r.ID));
+      if (nr) renderDetalleProximoPaso(nr);
+    }, 400);
+  });
+}
+
 function cambiarEstadoDirecto() {
   const r = state.recetas.find(x => String(x.ID) === String(state.recetaActualId));
   if (!r) return;
@@ -1019,6 +1110,10 @@ function cambiarEstadoDirecto() {
     if (res && res.error) { mostrarToast('Error: ' + res.error, true); return; }
     mostrarToast('Estado actualizado.');
     refrescarDatos();
+    setTimeout(() => {
+      const nr = state.recetas.find(x => String(x.ID) === String(r.ID));
+      if (nr) renderDetalleProximoPaso(nr);
+    }, 400);
   });
 }
 
@@ -1035,6 +1130,7 @@ function abrirDetalleReceta(id) {
     ].filter(Boolean).join('  ·  ') : '');
   document.getElementById('detalle-estado-selector').value = r ? (r.Estado || 'Teórica') : 'Teórica';
   document.getElementById('detalle-notas').textContent = r && r.Notas ? r.Notas : '';
+  if (r) renderDetalleProximoPaso(r);
   cambiarSubtabDetalle('items');
   document.getElementById('lista-items').innerHTML = '<div class="vacio"><span class="spinner"></span>Cargando insumos…</div>';
   document.getElementById('lista-evaluaciones').innerHTML = '<div class="vacio"><span class="spinner"></span>Cargando catas…</div>';
@@ -1054,14 +1150,101 @@ function cambiarSubtabDetalle(nombre) {
   document.querySelector('#modal-detalle .subtab-btn[data-subtab="' + nombre + '"]').classList.add('activo');
 }
 
+function calcularBalanceBatch(items, insumoMap) {
+  let volumenTotalMl = 0;
+  let alcoholPuroMl = 0;
+  let volumenVinoMl = 0;
+  let azucarTotalG = 0;
+  const insumosSinGrado = new Set();
+
+  items.forEach(it => {
+    if (!it.InsumoID) return;
+    const insumo = insumoMap[it.InsumoID];
+    if (!insumo) return;
+    const dim = dimensionDe(it.Unidad);
+    const cantidad = Number(it.Cantidad) || 0;
+
+    if (dim === 'volumen') {
+      const ml = cantidad * factorUnidad(it.Unidad);
+      volumenTotalMl += ml;
+      if (insumo.Clasificacion === 'Vino' || insumo.Clasificacion === 'Alcohol fortificante') {
+        const grado = Number(insumo.GradoAlcoholico) || 0;
+        if (!insumo.GradoAlcoholico) insumosSinGrado.add(insumo.Nombre);
+        alcoholPuroMl += ml * (grado / 100);
+      }
+      if (insumo.Clasificacion === 'Vino') volumenVinoMl += ml;
+    }
+    if (dim === 'masa' && insumo.Clasificacion === 'Azúcar') {
+      azucarTotalG += cantidad * factorUnidad(it.Unidad);
+    }
+  });
+
+  return {
+    volumenTotalMl,
+    porcentajeAlcohol: volumenTotalMl > 0 ? (alcoholPuroMl / volumenTotalMl * 100) : null,
+    porcentajeVino: volumenTotalMl > 0 ? (volumenVinoMl / volumenTotalMl * 100) : null,
+    azucarGL: volumenTotalMl > 0 ? (azucarTotalG / (volumenTotalMl / 1000)) : null,
+    insumosSinGrado: Array.from(insumosSinGrado)
+  };
+}
+
+function clasificacionAzucar(gl) {
+  if (gl === null) return '';
+  if (gl < 80) return 'Seco (tipo francés)';
+  if (gl < 150) return 'Intermedio';
+  return 'Dulce (tipo Torino)';
+}
+
+function renderBalanceBatch(items, insumoMap) {
+  const cont = document.getElementById('resumen-balance-batch');
+  const b = calcularBalanceBatch(items, insumoMap);
+  if (!b.volumenTotalMl) {
+    cont.innerHTML = '<p class="subtexto">Cargá insumos de Vino, Alcohol fortificante o Azúcar para ver el balance del batch acá.</p>';
+    return;
+  }
+  const abvClase = b.porcentajeAlcohol !== null && (b.porcentajeAlcohol < 15 || b.porcentajeAlcohol > 18) ? 'critico' : 'ok';
+  let html = '<div class="resumen-costos">' +
+    metricaHtml('Volumen total (calculado)', formatearNumero(b.volumenTotalMl) + ' ml') +
+    metricaHtml('% Alcohol (ABV)', (b.porcentajeAlcohol !== null ? formatearNumero(b.porcentajeAlcohol) + '%' : '—')) +
+    metricaHtml('% Vino', (b.porcentajeVino !== null ? formatearNumero(b.porcentajeVino) + '%' : '—')) +
+    metricaHtml('Azúcar', (b.azucarGL !== null ? formatearNumero(b.azucarGL) + ' g/L' : '—')) +
+    '</div>';
+  const notas = [];
+  if (b.porcentajeAlcohol !== null) {
+    notas.push('<span class="' + (abvClase === 'ok' ? 'estado-badge embotellada' : 'estado-badge') + '" style="margin-top:8px;">' +
+      (abvClase === 'ok' ? 'Dentro del objetivo 15–18%' : 'Fuera del objetivo 15–18%') + '</span>');
+  }
+  if (b.azucarGL !== null) {
+    notas.push('<span class="subtexto" style="margin-left:8px;">' + clasificacionAzucar(b.azucarGL) + ' según CAA</span>');
+  }
+  if (b.insumosSinGrado.length) {
+    notas.push('<p class="subtexto" style="color:var(--rojo-claro); margin-top:8px;">⚠ Definí el grado alcohólico de ' + b.insumosSinGrado.map(escapeHtml).join(', ') + ' en Insumos para un cálculo exacto.</p>');
+  }
+  cont.innerHTML = html + '<div style="margin-top:4px;">' + notas.join(' ') + '</div>' +
+    '<div style="text-align:right; margin-top:10px;"><button class="btn btn-sm" onclick="usarVolumenCalculado(' + Math.round(b.volumenTotalMl) + ')">Usar este volumen en la receta</button></div>';
+}
+
+function usarVolumenCalculado(ml) {
+  const r = state.recetas.find(x => String(x.ID) === String(state.recetaActualId));
+  if (!r) return;
+  apiCall('saveRecetaHeader', { ID: r.ID, VolumenBatchMl: ml }).then(res => {
+    if (res && res.error) { mostrarToast('Error: ' + res.error, true); return; }
+    mostrarToast('Volumen del batch actualizado a ' + ml + ' ml.');
+    refrescarDatos();
+  });
+}
+
 function renderItemsReceta(items) {
+  const insumoMap = {};
+  state.insumos.forEach(i => insumoMap[i.ID] = i);
+  renderBalanceBatch(items, insumoMap);
+
   const cont = document.getElementById('lista-items');
   if (!items.length) {
     cont.innerHTML = '<div class="vacio">Sin insumos ni pasos cargados todavía.</div>';
+    state._itemsActuales = items;
     return;
   }
-  const insumoMap = {};
-  state.insumos.forEach(i => insumoMap[i.ID] = i);
   cont.innerHTML = '<table><thead><tr><th>Categoría</th><th>Insumo / paso</th><th>Cant.</th><th>Fase</th><th></th></tr></thead><tbody>' +
     items.map(it => {
       const nombre = it.InsumoID ? (insumoMap[it.InsumoID] ? insumoMap[it.InsumoID].Nombre : it.InsumoNombre) : it.InsumoNombre;
@@ -1337,11 +1520,14 @@ function tituloCategoria(clave, tipo) {
 }
 
 function filaInsumo(i) {
+  const abv = (i.Clasificacion === 'Vino' || i.Clasificacion === 'Alcohol fortificante') && i.GradoAlcoholico
+    ? ' · ' + formatearNumero(i.GradoAlcoholico) + '% vol.'
+    : '';
   return '<div class="fila-insumo" onclick="abrirModalInsumo(\'' + i.ID + '\')">' +
     '<span class="nombre">' + escapeHtml(i.Nombre) +
       (i.DescripcionEfectos ? '<span class="desc trunc-1">' + escapeHtml(i.DescripcionEfectos) + '</span>' : '') +
     '</span>' +
-    '<span class="precio">$' + formatearNumero(i.PrecioPorUnidad) + ' / ' + escapeHtml(i.UnidadMedida || '') + '</span>' +
+    '<span class="precio">$' + formatearNumero(i.PrecioPorUnidad) + ' / ' + escapeHtml(i.UnidadMedida || '') + abv + '</span>' +
   '</div>';
 }
 
@@ -1372,9 +1558,10 @@ function guardarCategoriaInfoUI() {
   });
 }
 
-function toggleSubclasificacion() {
+function toggleCamposPorClasificacion() {
   const clas = document.getElementById('insumo-clasificacion').value;
   document.getElementById('campo-subclasificacion').style.display = clas === 'Botánico' ? 'block' : 'none';
+  document.getElementById('campo-grado-alcoholico').style.display = (clas === 'Vino' || clas === 'Alcohol fortificante') ? 'block' : 'none';
 }
 
 function abrirModalInsumo(id) {
@@ -1383,8 +1570,9 @@ function abrirModalInsumo(id) {
   document.getElementById('insumo-id').value = i ? i.ID : '';
   document.getElementById('insumo-nombre').value = i ? i.Nombre : '';
   document.getElementById('insumo-clasificacion').value = i ? (i.Clasificacion || 'Botánico') : 'Botánico';
-  toggleSubclasificacion();
+  toggleCamposPorClasificacion();
   document.getElementById('insumo-subclasificacion').value = i ? (i.Subclasificacion || 'Agentes de Amargor') : 'Agentes de Amargor';
+  document.getElementById('insumo-grado-alcoholico').value = i ? (i.GradoAlcoholico || '') : '';
   document.getElementById('insumo-unidad').value = i ? i.UnidadMedida : '';
   document.getElementById('insumo-precio').value = i ? i.PrecioPorUnidad : '';
   document.getElementById('insumo-stock-minimo').value = i ? (i.StockMinimo || '') : '';
@@ -1405,6 +1593,7 @@ function guardarInsumo() {
     Nombre: document.getElementById('insumo-nombre').value.trim(),
     Clasificacion: clas,
     Subclasificacion: clas === 'Botánico' ? document.getElementById('insumo-subclasificacion').value : '',
+    GradoAlcoholico: (clas === 'Vino' || clas === 'Alcohol fortificante') ? document.getElementById('insumo-grado-alcoholico').value : '',
     UnidadMedida: document.getElementById('insumo-unidad').value.trim(),
     PrecioPorUnidad: document.getElementById('insumo-precio').value,
     StockMinimo: document.getElementById('insumo-stock-minimo').value,

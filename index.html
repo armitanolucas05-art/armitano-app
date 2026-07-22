@@ -134,7 +134,10 @@ button{font-family:'EB Garamond', serif;}
   color:var(--hueso-muted);
 }
 .estado-badge.embotellada{color:var(--ok); border-color:var(--ok);}
-.estado-badge.reposando{color:var(--dorado); border-color:var(--dorado);}
+.estado-badge.enreposo{color:var(--dorado); border-color:var(--dorado);}
+.estado-badge.validado{color:var(--ok); border-color:var(--ok);}
+.estado-badge.aconfirmar{color:var(--dorado); border-color:var(--dorado);}
+.estado-badge.detectado{color:var(--hueso-muted); border-color:var(--linea);}
 .proximo-paso{
   color:var(--dorado-brillante); font-size:12px; margin-top:10px; padding-top:8px;
   border-top:1px solid var(--linea);
@@ -145,6 +148,13 @@ button{font-family:'EB Garamond', serif;}
   padding:12px 14px; font-size:14px;
 }
 .proximo-paso-detalle.ok{border-color:var(--ok); color:var(--ok);}
+.tiempos-reales{
+  background:var(--panel-2); border:1px solid var(--linea); border-radius:var(--radius);
+  padding:12px 14px; display:flex; gap:22px; flex-wrap:wrap;
+}
+.tiempos-reales .t-item .l{font-size:11px; letter-spacing:1px; text-transform:uppercase; color:var(--hueso-muted);}
+.tiempos-reales .t-item .v{font-size:16px; color:var(--dorado-brillante); margin-top:2px;}
+.tiempos-reales .t-item .v.pendiente{color:var(--hueso-muted); font-style:italic; font-size:13px;}
 
 /* ---------- formularios ---------- */
 label{display:block; font-size:13px; color:var(--hueso-muted); margin-bottom:4px; letter-spacing:.5px;}
@@ -332,6 +342,7 @@ td.num.error{color:var(--rojo-claro);}
       <button class="tab-btn" data-vista="costos" onclick="cambiarTab('costos')">Centro de costos</button>
       <button class="tab-btn" data-vista="stock" onclick="cambiarTab('stock')">Stock</button>
       <button class="tab-btn" data-vista="marca" onclick="cambiarTab('marca')">Marca</button>
+      <button class="tab-btn" data-vista="aprendizajes" onclick="cambiarTab('aprendizajes')">Aprendizajes</button>
       <button class="tab-btn" style="opacity:.6;" onclick="abrirConfigManual()" title="Reconfigurar conexión">⚙</button>
     </div>
 
@@ -416,6 +427,20 @@ td.num.error{color:var(--rojo-claro);}
         <div id="grid-marca-secciones" class="grid-recetas"><div class="vacio">Cargando…</div></div>
       </div>
     </div>
+
+    <!-- ===================== VISTA APRENDIZAJES ===================== -->
+    <div id="vista-aprendizajes" class="vista">
+      <div class="panel">
+        <div class="panel-header">
+          <div>
+            <h2>Aprendizajes</h2>
+            <p class="subtexto">Conclusiones destiladas — de una receta puntual o transversales a todo el proyecto.</p>
+          </div>
+          <button class="btn btn-primario" onclick="abrirModalAprendizaje()">+ Nuevo aprendizaje</button>
+        </div>
+        <div id="lista-aprendizajes"><div class="vacio">Cargando…</div></div>
+      </div>
+    </div>
   </div>
 
 </div>
@@ -434,8 +459,8 @@ td.num.error{color:var(--rojo-claro);}
         <select id="receta-estado" onchange="onCambioEstadoReceta()">
           <option>Teórica</option>
           <option>En maceración</option>
+          <option>En reposo</option>
           <option>Embotellada</option>
-          <option>Reposando</option>
           <option>Evaluada</option>
         </select>
       </div>
@@ -480,12 +505,13 @@ td.num.error{color:var(--rojo-claro);}
       <select id="detalle-estado-selector" onchange="cambiarEstadoDirecto()" style="margin:0; width:auto; min-width:170px;">
         <option>Teórica</option>
         <option>En maceración</option>
+        <option>En reposo</option>
         <option>Embotellada</option>
-        <option>Reposando</option>
         <option>Evaluada</option>
       </select>
     </div>
     <div id="detalle-proximo-paso" style="margin-bottom:14px;"></div>
+    <div id="detalle-tiempos-reales" style="margin-bottom:14px;"></div>
     <div id="detalle-notas" class="subtexto" style="margin-bottom:18px;"></div>
 
     <div class="subtabs">
@@ -532,6 +558,10 @@ td.num.error{color:var(--rojo-claro);}
       <div class="campo-fila">
         <div><label>Cantidad</label><input type="number" step="any" id="item-cantidad"></div>
         <div><label>Unidad</label><input type="text" id="item-unidad" list="item-unidad-datalist"><datalist id="item-unidad-datalist"></datalist></div>
+      </div>
+      <div id="campo-item-concentracion-azucar" style="display:none;">
+        <label>Concentración de azúcar en este batch (%)</label>
+        <input type="number" step="any" id="item-concentracion-azucar" placeholder="Dejalo vacío para usar la de referencia del insumo">
       </div>
     </div>
 
@@ -622,6 +652,37 @@ td.num.error{color:var(--rojo-claro);}
   </div>
 </div>
 
+<!-- ===================== MODAL APRENDIZAJE ===================== -->
+<div class="overlay" id="modal-aprendizaje">
+  <div class="modal" style="max-width:600px;">
+    <h3 id="titulo-modal-aprendizaje">Nuevo aprendizaje</h3>
+    <input type="hidden" id="aprendizaje-id">
+    <div class="campo-fila">
+      <div><label>Categoría</label><input type="text" id="aprendizaje-categoria" placeholder="Ej. Botánicos, Proceso, Vino…"></div>
+      <div><label>Estado</label>
+        <select id="aprendizaje-estado">
+          <option>Validado</option>
+          <option>A confirmar</option>
+          <option>Detectado</option>
+        </select>
+      </div>
+    </div>
+    <div class="campo-fila">
+      <div><label>Fecha</label><input type="date" id="aprendizaje-fecha"></div>
+      <div><label>Receta de origen (opcional)</label>
+        <select id="aprendizaje-receta-origen"><option value="">— Ninguna / transversal —</option></select>
+      </div>
+    </div>
+    <label>Aprendizaje</label>
+    <textarea id="aprendizaje-texto" style="min-height:120px;" placeholder="La conclusión, en tus palabras…"></textarea>
+    <div class="modal-acciones">
+      <button class="btn" onclick="cerrarModal('modal-aprendizaje')">Cancelar</button>
+      <button class="btn-fantasma" id="btn-borrar-aprendizaje" style="display:none;" onclick="borrarAprendizajeActual()">Eliminar</button>
+      <button class="btn btn-primario" onclick="guardarAprendizaje()">Guardar</button>
+    </div>
+  </div>
+</div>
+
 <!-- ===================== MODAL SECCIÓN DE MARCA ===================== -->
 <div class="overlay" id="modal-marca-seccion">
   <div class="modal" style="max-width:680px;">
@@ -687,6 +748,10 @@ td.num.error{color:var(--rojo-claro);}
       <div id="campo-grado-alcoholico" style="display:none;">
         <label>Grado alcohólico (%)</label>
         <input type="number" step="any" id="insumo-grado-alcoholico" placeholder="Ej. 12.1">
+      </div>
+      <div id="campo-concentracion-azucar" style="display:none;">
+        <label>Concentración de azúcar de referencia (%)</label>
+        <input type="number" step="any" id="insumo-concentracion-azucar" placeholder="Ej. 100 (pura) o 50 (jarabe 1:1)">
       </div>
     </div>
     <div class="campo-fila">
@@ -887,6 +952,7 @@ function cambiarTab(nombre) {
   document.querySelector('.tab-btn[data-vista="' + nombre + '"]').classList.add('activo');
   if (nombre === 'stock') cargarStock();
   if (nombre === 'marca') cargarMarca();
+  if (nombre === 'aprendizajes') cargarAprendizajes();
 }
 
 /* ---------------- toast ---------------- */
@@ -962,6 +1028,10 @@ function renderRecetas() {
     let lineaProximo = '';
     if (proximo && proximo.paso === 'lista') {
       lineaProximo = '<div class="proximo-paso ok">✓ Lista para evaluar — ' + proximo.diasRealesTotal + ' días reales</div>';
+    } else if (proximo && proximo.paso === 'reposo') {
+      const t = calcularTiemposReales(r);
+      lineaProximo = '<div class="proximo-paso">→ ' + escapeHtml(proximo.texto) + ' — ' + formatDiasRestantes(proximo.diasRestantes) +
+        (t.diasExtracto !== null ? '<br><span style="opacity:.75;">Extracto real: ' + t.diasExtracto + ' días</span>' : '') + '</div>';
     } else if (proximo) {
       lineaProximo = '<div class="proximo-paso">→ ' + escapeHtml(proximo.texto) + ' — ' + formatDiasRestantes(proximo.diasRestantes) + '</div>';
     }
@@ -1061,6 +1131,32 @@ function eliminarRecetaActual() {
   });
 }
 
+function calcularTiemposReales(r) {
+  const inicio = r.FechaInicioMaceracion ? new Date(r.FechaInicioMaceracion + 'T00:00:00') : null;
+  const finExtracto = r.FechaFinExtracto ? new Date(r.FechaFinExtracto + 'T00:00:00') : null;
+  const finReposo = r.FechaFinReposo ? new Date(r.FechaFinReposo + 'T00:00:00') : null;
+  const out = { diasExtracto: null, diasReposo: null, diasTotal: null };
+  if (inicio && finExtracto) out.diasExtracto = Math.round((finExtracto - inicio) / 86400000);
+  if (finExtracto && finReposo) out.diasReposo = Math.round((finReposo - finExtracto) / 86400000);
+  if (inicio && finReposo) out.diasTotal = Math.round((finReposo - inicio) / 86400000);
+  return out;
+}
+
+function renderTiemposReales(r) {
+  const cont = document.getElementById('detalle-tiempos-reales');
+  if (!cont) return;
+  if (!r.FechaInicioMaceracion) { cont.innerHTML = ''; return; }
+  const t = calcularTiemposReales(r);
+  const item = (label, dias) =>
+    '<div class="t-item"><div class="l">' + label + '</div><div class="v' + (dias === null ? ' pendiente' : '') + '">' +
+    (dias === null ? 'aún no confirmado' : dias + ' día' + (dias === 1 ? '' : 's')) + '</div></div>';
+  cont.innerHTML = '<div class="tiempos-reales">' +
+    item('Extracto real', t.diasExtracto) +
+    item('Reposo real', t.diasReposo) +
+    item('Total real', t.diasTotal) +
+    '</div>';
+}
+
 function renderDetalleProximoPaso(r) {
   const cont = document.getElementById('detalle-proximo-paso');
   if (!cont) return;
@@ -1085,15 +1181,19 @@ function marcarPasoHecho(paso) {
   if (!r) return;
   const fecha = document.getElementById('fecha-marcar-paso').value || new Date().toISOString().slice(0, 10);
   const payload = { ID: r.ID };
-  if (paso === 'extracto') payload.FechaFinExtracto = fecha;
-  if (paso === 'reposo') payload.FechaFinReposo = fecha;
+  if (paso === 'extracto') { payload.FechaFinExtracto = fecha; payload.Estado = 'En reposo'; }
+  if (paso === 'reposo') { payload.FechaFinReposo = fecha; payload.Estado = 'Embotellada'; }
   apiCall('saveRecetaHeader', payload).then(res => {
     if (res && res.error) { mostrarToast('Error: ' + res.error, true); return; }
     mostrarToast('Paso registrado.');
     refrescarDatos();
     setTimeout(() => {
       const nr = state.recetas.find(x => String(x.ID) === String(r.ID));
-      if (nr) renderDetalleProximoPaso(nr);
+      if (nr) {
+        renderDetalleProximoPaso(nr);
+        renderTiemposReales(nr);
+        document.getElementById('detalle-estado-selector').value = nr.Estado || 'Teórica';
+      }
     }, 400);
   });
 }
@@ -1112,7 +1212,7 @@ function cambiarEstadoDirecto() {
     refrescarDatos();
     setTimeout(() => {
       const nr = state.recetas.find(x => String(x.ID) === String(r.ID));
-      if (nr) renderDetalleProximoPaso(nr);
+      if (nr) { renderDetalleProximoPaso(nr); renderTiemposReales(nr); }
     }, 400);
   });
 }
@@ -1130,7 +1230,7 @@ function abrirDetalleReceta(id) {
     ].filter(Boolean).join('  ·  ') : '');
   document.getElementById('detalle-estado-selector').value = r ? (r.Estado || 'Teórica') : 'Teórica';
   document.getElementById('detalle-notas').textContent = r && r.Notas ? r.Notas : '';
-  if (r) renderDetalleProximoPaso(r);
+  if (r) { renderDetalleProximoPaso(r); renderTiemposReales(r); }
   cambiarSubtabDetalle('items');
   document.getElementById('lista-items').innerHTML = '<div class="vacio"><span class="spinner"></span>Cargando insumos…</div>';
   document.getElementById('lista-evaluaciones').innerHTML = '<div class="vacio"><span class="spinner"></span>Cargando catas…</div>';
@@ -1155,6 +1255,7 @@ function calcularBalanceBatch(items, insumoMap) {
   let alcoholPuroMl = 0;
   let volumenVinoMl = 0;
   let azucarTotalG = 0;
+  let botanicosCount = 0;
   const insumosSinGrado = new Set();
 
   items.forEach(it => {
@@ -1163,6 +1264,8 @@ function calcularBalanceBatch(items, insumoMap) {
     if (!insumo) return;
     const dim = dimensionDe(it.Unidad);
     const cantidad = Number(it.Cantidad) || 0;
+
+    if (insumo.Clasificacion === 'Botánico') botanicosCount++;
 
     if (dim === 'volumen') {
       const ml = cantidad * factorUnidad(it.Unidad);
@@ -1175,7 +1278,11 @@ function calcularBalanceBatch(items, insumoMap) {
       if (insumo.Clasificacion === 'Vino') volumenVinoMl += ml;
     }
     if (dim === 'masa' && insumo.Clasificacion === 'Azúcar') {
-      azucarTotalG += cantidad * factorUnidad(it.Unidad);
+      const gramos = cantidad * factorUnidad(it.Unidad);
+      const concentracion = (it.ConcentracionAzucar !== undefined && it.ConcentracionAzucar !== '')
+        ? Number(it.ConcentracionAzucar)
+        : (insumo.ConcentracionAzucarReferencia !== undefined && insumo.ConcentracionAzucarReferencia !== '' ? Number(insumo.ConcentracionAzucarReferencia) : 100);
+      azucarTotalG += gramos * (concentracion / 100);
     }
   });
 
@@ -1184,15 +1291,18 @@ function calcularBalanceBatch(items, insumoMap) {
     porcentajeAlcohol: volumenTotalMl > 0 ? (alcoholPuroMl / volumenTotalMl * 100) : null,
     porcentajeVino: volumenTotalMl > 0 ? (volumenVinoMl / volumenTotalMl * 100) : null,
     azucarGL: volumenTotalMl > 0 ? (azucarTotalG / (volumenTotalMl / 1000)) : null,
+    botanicosCount,
     insumosSinGrado: Array.from(insumosSinGrado)
   };
 }
 
-function clasificacionAzucar(gl) {
+function clasificacionBx(gl) {
   if (gl === null) return '';
-  if (gl < 80) return 'Seco (tipo francés)';
-  if (gl < 150) return 'Intermedio';
-  return 'Dulce (tipo Torino)';
+  const bx = gl / 10;
+  if (bx <= 3) return 'Extra-seco (~' + formatearNumero(bx) + '°Bx)';
+  if (bx <= 9) return 'Seco (~' + formatearNumero(bx) + '°Bx)';
+  if (bx <= 13) return 'Semi-dulce (~' + formatearNumero(bx) + '°Bx)';
+  return 'Dulce (~' + formatearNumero(bx) + '°Bx)';
 }
 
 function renderBalanceBatch(items, insumoMap) {
@@ -1208,19 +1318,21 @@ function renderBalanceBatch(items, insumoMap) {
     metricaHtml('% Alcohol (ABV)', (b.porcentajeAlcohol !== null ? formatearNumero(b.porcentajeAlcohol) + '%' : '—')) +
     metricaHtml('% Vino', (b.porcentajeVino !== null ? formatearNumero(b.porcentajeVino) + '%' : '—')) +
     metricaHtml('Azúcar', (b.azucarGL !== null ? formatearNumero(b.azucarGL) + ' g/L' : '—')) +
+    metricaHtml('Botánicos', String(b.botanicosCount)) +
     '</div>';
   const notas = [];
   if (b.porcentajeAlcohol !== null) {
-    notas.push('<span class="' + (abvClase === 'ok' ? 'estado-badge embotellada' : 'estado-badge') + '" style="margin-top:8px;">' +
+    notas.push('<span class="' + (abvClase === 'ok' ? 'estado-badge embotellada' : 'estado-badge') + '">' +
       (abvClase === 'ok' ? 'Dentro del objetivo 15–18%' : 'Fuera del objetivo 15–18%') + '</span>');
   }
   if (b.azucarGL !== null) {
-    notas.push('<span class="subtexto" style="margin-left:8px;">' + clasificacionAzucar(b.azucarGL) + ' según CAA</span>');
+    notas.push('<span class="estado-badge enreposo">' + clasificacionBx(b.azucarGL) + '</span>');
   }
+  let notasHtml = notas.length ? '<div style="margin-top:8px; display:flex; gap:8px; flex-wrap:wrap;">' + notas.join('') + '</div>' : '';
   if (b.insumosSinGrado.length) {
-    notas.push('<p class="subtexto" style="color:var(--rojo-claro); margin-top:8px;">⚠ Definí el grado alcohólico de ' + b.insumosSinGrado.map(escapeHtml).join(', ') + ' en Insumos para un cálculo exacto.</p>');
+    notasHtml += '<p class="subtexto" style="color:var(--rojo-claro); margin-top:8px;">⚠ Definí el grado alcohólico de ' + b.insumosSinGrado.map(escapeHtml).join(', ') + ' en Insumos para un cálculo exacto.</p>';
   }
-  cont.innerHTML = html + '<div style="margin-top:4px;">' + notas.join(' ') + '</div>' +
+  cont.innerHTML = html + notasHtml +
     '<div style="text-align:right; margin-top:10px;"><button class="btn btn-sm" onclick="usarVolumenCalculado(' + Math.round(b.volumenTotalMl) + ')">Usar este volumen en la receta</button></div>';
 }
 
@@ -1270,7 +1382,7 @@ function poblarSelectInsumos() {
   });
   sel.innerHTML = Object.keys(grupos).sort().map(g =>
     '<optgroup label="' + escapeHtml(g) + '">' +
-      grupos[g].map(i => '<option value="' + i.ID + '" data-unidad="' + escapeHtml(i.UnidadMedida || '') + '">' + escapeHtml(i.Nombre) + '</option>').join('') +
+      grupos[g].map(i => '<option value="' + i.ID + '" data-unidad="' + escapeHtml(i.UnidadMedida || '') + '" data-clasificacion="' + escapeHtml(i.Clasificacion || '') + '">' + escapeHtml(i.Nombre) + '</option>').join('') +
     '</optgroup>'
   ).join('');
 }
@@ -1279,7 +1391,9 @@ function autocompletarUnidadItem() {
   const sel = document.getElementById('item-insumo-select');
   const opt = sel.options[sel.selectedIndex];
   const unidadInsumo = opt ? (opt.getAttribute('data-unidad') || '') : '';
+  const clasInsumo = opt ? (opt.getAttribute('data-clasificacion') || '') : '';
   document.getElementById('item-unidad').value = unidadInsumo;
+  document.getElementById('campo-item-concentracion-azucar').style.display = clasInsumo === 'Azúcar' ? 'block' : 'none';
   const dim = dimensionDe(unidadInsumo);
   const datalist = document.getElementById('item-unidad-datalist');
   const inputUnidad = document.getElementById('item-unidad');
@@ -1303,6 +1417,7 @@ function abrirModalItem(tipo) {
   document.getElementById('btn-borrar-item').style.display = 'none';
   if (tipo === 'insumo') { poblarSelectInsumos(); autocompletarUnidadItem(); }
   document.getElementById('item-cantidad').value = '';
+  document.getElementById('item-concentracion-azucar').value = '';
   document.getElementById('item-fase').value = '';
   document.getElementById('item-orden').value = (state._itemsActuales ? state._itemsActuales.length + 1 : 1);
   document.getElementById('item-nota').value = '';
@@ -1329,6 +1444,7 @@ function abrirEdicionItem(itemId) {
     autocompletarUnidadItem();
     document.getElementById('item-cantidad').value = it.Cantidad || '';
     document.getElementById('item-unidad').value = it.Unidad || '';
+    document.getElementById('item-concentracion-azucar').value = it.ConcentracionAzucar || '';
   } else {
     document.getElementById('item-categoria').value = it.Categoria || 'OTRO';
     document.getElementById('item-paso-nombre').value = it.InsumoNombre || '';
@@ -1360,6 +1476,7 @@ function guardarItem() {
     data.Categoria = insumo ? insumo.Clasificacion : '';
     data.Cantidad = document.getElementById('item-cantidad').value;
     data.Unidad = document.getElementById('item-unidad').value;
+    data.ConcentracionAzucar = (insumo && insumo.Clasificacion === 'Azúcar') ? document.getElementById('item-concentracion-azucar').value : '';
     if (!data.Cantidad) { mostrarToast('Falta la cantidad.', true); return; }
   } else {
     data.InsumoID = '';
@@ -1562,6 +1679,7 @@ function toggleCamposPorClasificacion() {
   const clas = document.getElementById('insumo-clasificacion').value;
   document.getElementById('campo-subclasificacion').style.display = clas === 'Botánico' ? 'block' : 'none';
   document.getElementById('campo-grado-alcoholico').style.display = (clas === 'Vino' || clas === 'Alcohol fortificante') ? 'block' : 'none';
+  document.getElementById('campo-concentracion-azucar').style.display = clas === 'Azúcar' ? 'block' : 'none';
 }
 
 function abrirModalInsumo(id) {
@@ -1573,6 +1691,7 @@ function abrirModalInsumo(id) {
   toggleCamposPorClasificacion();
   document.getElementById('insumo-subclasificacion').value = i ? (i.Subclasificacion || 'Agentes de Amargor') : 'Agentes de Amargor';
   document.getElementById('insumo-grado-alcoholico').value = i ? (i.GradoAlcoholico || '') : '';
+  document.getElementById('insumo-concentracion-azucar').value = i ? (i.ConcentracionAzucarReferencia || '') : '';
   document.getElementById('insumo-unidad').value = i ? i.UnidadMedida : '';
   document.getElementById('insumo-precio').value = i ? i.PrecioPorUnidad : '';
   document.getElementById('insumo-stock-minimo').value = i ? (i.StockMinimo || '') : '';
@@ -1594,6 +1713,7 @@ function guardarInsumo() {
     Clasificacion: clas,
     Subclasificacion: clas === 'Botánico' ? document.getElementById('insumo-subclasificacion').value : '',
     GradoAlcoholico: (clas === 'Vino' || clas === 'Alcohol fortificante') ? document.getElementById('insumo-grado-alcoholico').value : '',
+    ConcentracionAzucarReferencia: clas === 'Azúcar' ? document.getElementById('insumo-concentracion-azucar').value : '',
     UnidadMedida: document.getElementById('insumo-unidad').value.trim(),
     PrecioPorUnidad: document.getElementById('insumo-precio').value,
     StockMinimo: document.getElementById('insumo-stock-minimo').value,
@@ -1879,6 +1999,91 @@ function borrarMarcaSeccionActual() {
     mostrarToast('Eliminada.');
     cerrarModal('modal-marca-seccion');
     cargarMarca();
+  });
+}
+
+/* ============================================================
+   APRENDIZAJES
+   ============================================================ */
+
+function cargarAprendizajes() {
+  const cont = document.getElementById('lista-aprendizajes');
+  cont.innerHTML = '<div class="vacio"><span class="spinner"></span>Cargando…</div>';
+  apiCall('getAprendizajes').then(res => {
+    state._aprendizajes = Array.isArray(res) ? res : [];
+    renderAprendizajes(state._aprendizajes);
+  });
+}
+
+function claseEstadoAprendizaje(estado) {
+  return String(estado || '').toLowerCase().replace(/\s+/g, '');
+}
+
+function renderAprendizajes(lista) {
+  const cont = document.getElementById('lista-aprendizajes');
+  if (!lista.length) {
+    cont.innerHTML = '<div class="vacio">Todavía no hay aprendizajes registrados. Cargá el primero.</div>';
+    return;
+  }
+  cont.innerHTML = '<table><thead><tr><th>Categoría</th><th>Aprendizaje</th><th>Estado</th><th>Fecha</th><th>Receta</th></tr></thead><tbody>' +
+    lista.map(a => {
+      const receta = a.RecetaOrigenID ? state.recetas.find(r => String(r.ID) === String(a.RecetaOrigenID)) : null;
+      return '<tr onclick="abrirModalAprendizaje(\'' + a.ID + '\')" style="cursor:pointer;">' +
+        '<td>' + escapeHtml(a.Categoria || '') + '</td>' +
+        '<td class="trunc-1" style="max-width:280px;">' + escapeHtml(a.Aprendizaje || '') + '</td>' +
+        '<td><span class="estado-badge ' + claseEstadoAprendizaje(a.Estado) + '">' + escapeHtml(a.Estado || '') + '</span></td>' +
+        '<td>' + escapeHtml(a.Fecha || '') + '</td>' +
+        '<td>' + (receta ? escapeHtml(receta.ID) : '—') + '</td>' +
+      '</tr>';
+    }).join('') + '</tbody></table>';
+}
+
+function poblarSelectRecetaOrigen(valorActual) {
+  const sel = document.getElementById('aprendizaje-receta-origen');
+  sel.innerHTML = '<option value="">— Ninguna / transversal —</option>' +
+    state.recetas.map(r => '<option value="' + r.ID + '">' + escapeHtml(r.ID + ' · ' + r.Nombre) + '</option>').join('');
+  sel.value = valorActual || '';
+}
+
+function abrirModalAprendizaje(id) {
+  const a = id ? (state._aprendizajes || []).find(x => String(x.ID) === String(id)) : null;
+  document.getElementById('titulo-modal-aprendizaje').textContent = a ? 'Editar aprendizaje' : 'Nuevo aprendizaje';
+  document.getElementById('aprendizaje-id').value = a ? a.ID : '';
+  document.getElementById('aprendizaje-categoria').value = a ? (a.Categoria || '') : '';
+  document.getElementById('aprendizaje-estado').value = a ? (a.Estado || 'Detectado') : 'Detectado';
+  document.getElementById('aprendizaje-fecha').value = a ? a.Fecha : new Date().toISOString().slice(0, 10);
+  document.getElementById('aprendizaje-texto').value = a ? a.Aprendizaje : '';
+  poblarSelectRecetaOrigen(a ? a.RecetaOrigenID : '');
+  document.getElementById('btn-borrar-aprendizaje').style.display = a ? 'inline-block' : 'none';
+  abrirModal('modal-aprendizaje');
+}
+
+function guardarAprendizaje() {
+  const data = {
+    ID: document.getElementById('aprendizaje-id').value || undefined,
+    Categoria: document.getElementById('aprendizaje-categoria').value.trim(),
+    Estado: document.getElementById('aprendizaje-estado').value,
+    Fecha: document.getElementById('aprendizaje-fecha').value,
+    RecetaOrigenID: document.getElementById('aprendizaje-receta-origen').value,
+    Aprendizaje: document.getElementById('aprendizaje-texto').value.trim()
+  };
+  if (!data.Aprendizaje) { mostrarToast('Escribí el aprendizaje.', true); return; }
+  apiCall('saveAprendizaje', data).then(res => {
+    if (res && res.error) { mostrarToast('Error: ' + res.error, true); return; }
+    mostrarToast('Aprendizaje guardado.');
+    cerrarModal('modal-aprendizaje');
+    cargarAprendizajes();
+  });
+}
+
+function borrarAprendizajeActual() {
+  const id = document.getElementById('aprendizaje-id').value;
+  if (!id) return;
+  if (!confirm('¿Eliminar este aprendizaje?')) return;
+  apiCall('deleteAprendizaje', { id: id }).then(() => {
+    mostrarToast('Eliminado.');
+    cerrarModal('modal-aprendizaje');
+    cargarAprendizajes();
   });
 }
 

@@ -327,12 +327,48 @@ td.num.error{color:var(--rojo-claro);}
   </div>
   <div class="divisor-diamante"><span class="linea"></span><span class="diamante"></span><span class="linea"></span></div>
 
-  <div id="config-view" class="config-box" style="display:none;">
-    <h2 style="color:var(--dorado);">Conectar con la base de datos</h2>
-    <p class="subtexto" style="margin-bottom:16px;">Pegá la URL de tu Apps Script publicado (termina en <code>/exec</code>).</p>
-    <input type="text" id="input-script-url" placeholder="https://script.google.com/macros/s/AKfycb.../exec">
-    <button class="btn btn-primario" onclick="guardarConfig()">Conectar</button>
-    <p id="config-msg" class="subtexto" style="margin-top:14px;"></p>
+  <div id="config-view" class="config-box" style="display:none; max-width:640px;">
+    <div class="subtabs" style="justify-content:center;">
+      <button class="subtab-btn activo" data-subtab="conexion" onclick="cambiarSubtabConfig('conexion')">Conexión</button>
+      <button class="subtab-btn" data-subtab="instructivo" onclick="cambiarSubtabConfig('instructivo')">Instructivo de cálculos</button>
+    </div>
+
+    <div id="config-subpanel-conexion" class="subpanel activo" style="text-align:center;">
+      <h2 style="color:var(--dorado);">Conectar con la base de datos</h2>
+      <p class="subtexto" style="margin-bottom:16px;">Pegá la URL de tu Apps Script publicado (termina en <code>/exec</code>).</p>
+      <input type="text" id="input-script-url" placeholder="https://script.google.com/macros/s/AKfycb.../exec">
+      <button class="btn btn-primario" onclick="guardarConfig()">Conectar</button>
+      <p id="config-msg" class="subtexto" style="margin-top:14px;"></p>
+    </div>
+
+    <div id="config-subpanel-instructivo" class="subpanel" style="text-align:left;">
+      <h2 style="color:var(--dorado); text-align:center;">Instructivo de cálculos</h2>
+      <p class="subtexto" style="text-align:center; margin-bottom:18px;">Referencia de cómo calcula cada número la app — para no perder el rastro con el tiempo.</p>
+
+      <h3 style="color:var(--dorado-brillante); font-size:16px; margin:18px 0 4px;">Volumen total del batch</h3>
+      <p class="subtexto">Suma de todos los insumos cargados en unidades de volumen (ml o L) — vino, alcohol fortificante, agua. Los botánicos en gramos/unidades/gotas no suman volumen.</p>
+
+      <h3 style="color:var(--dorado-brillante); font-size:16px; margin:18px 0 4px;">% Alcohol (ABV) y % Vino</h3>
+      <p class="subtexto">Alcohol puro = Σ (volumen de cada Vino/Alcohol fortificante × su Grado alcohólico ÷ 100). % Alcohol = alcohol puro ÷ volumen total del batch. % Vino = volumen de vino ÷ volumen total. El grado alcohólico se carga una vez por insumo, en Insumos.</p>
+
+      <h3 style="color:var(--dorado-brillante); font-size:16px; margin:18px 0 4px;">Azúcar (g/L) y clasificación °Bx</h3>
+      <p class="subtexto">Por cada insumo Azúcar: gramos cargados × concentración de azúcar pura (% — de referencia en Insumos, o pisada puntualmente en la receta si es un caramelo variable) ÷ 100. Se suma todo y se divide por el volumen total en litros. La clasificación (Extra-seco/Seco/Semi-dulce/Dulce) es una aproximación: °Bx ≈ (g/L) ÷ 10 — no reemplaza la medición con refractómetro.</p>
+
+      <h3 style="color:var(--dorado-brillante); font-size:16px; margin:18px 0 4px;">Botánicos</h3>
+      <p class="subtexto">Cuenta simple: cantidad de renglones de la receta cuyo insumo está clasificado como Botánico.</p>
+
+      <h3 style="color:var(--dorado-brillante); font-size:16px; margin:18px 0 4px;">Perfil sensorial (radar de 4 ejes)</h3>
+      <p class="subtexto">Cada insumo tiene 4 puntajes fijos (0 a 5, cargados en Insumos): Amargor, Dulzor, Cítrico, Aromático. Por cada renglón de la receta: dosis = cantidad ÷ volumen total del batch en litros. Total de cada eje = Σ (dosis × puntaje del insumo en ese eje), sumando todos los insumos de la receta. El gráfico se autoescala a los valores actuales — no es una escala fija de 0 a 5, es una comparación de forma entre ejes.</p>
+
+      <h3 style="color:var(--dorado-brillante); font-size:16px; margin:18px 0 4px;">Centro de costos</h3>
+      <p class="subtexto">Por cada insumo de la receta: cantidad convertida a la unidad del insumo (g↔kg, ml↔L se convierten solos; unidades especiales deben coincidir exactamente) × precio por unidad. Costo por litro/copa (100ml)/botella (750ml) = costo total del batch ÷ volumen del batch (el que cargaste a mano en la receta, no el calculado) × la medida correspondiente.</p>
+
+      <h3 style="color:var(--dorado-brillante); font-size:16px; margin:18px 0 4px;">Stock</h3>
+      <p class="subtexto">El stock de cada insumo es la suma de todos sus movimientos históricos (compras +, consumo automático de recetas −, ajustes manuales +/-), convertidos a la unidad del insumo. No es un número fijo que se edita: es siempre el resultado de sumar el historial completo.</p>
+
+      <h3 style="color:var(--dorado-brillante); font-size:16px; margin:18px 0 4px;">Tiempos reales</h3>
+      <p class="subtexto">Extracto real = fecha en que marcaste "extracto filtrado" − fecha de inicio de maceración. Reposo real = fecha de "fin del reposo" − fecha de "extracto filtrado". Total real = suma de ambos. Ninguno avanza solo por calendario — cada etapa espera tu confirmación manual.</p>
+    </div>
   </div>
 
   <div id="app-view" style="display:none;">
@@ -555,6 +591,7 @@ td.num.error{color:var(--rojo-claro);}
     <div id="item-campos-insumo">
       <label>Insumo</label>
       <select id="item-insumo-select" onchange="autocompletarUnidadItem()"></select>
+      <div id="item-insumo-ficha" style="display:none; background:var(--panel-2); border:1px solid var(--linea); border-radius:var(--radius); padding:10px 12px; margin:-4px 0 14px; font-size:13px;"></div>
       <div class="campo-fila">
         <div><label>Cantidad</label><input type="number" step="any" id="item-cantidad"></div>
         <div><label>Unidad</label><input type="text" id="item-unidad" list="item-unidad-datalist"><datalist id="item-unidad-datalist"></datalist></div>
@@ -768,6 +805,16 @@ td.num.error{color:var(--rojo-claro);}
     </div>
     <label>Descripción / efectos</label>
     <textarea id="insumo-descripcion" placeholder="Ej. Amargor profundo, alma del vermut, propiedades conservantes…"></textarea>
+    <label>Perfil sensorial (0 a 5 por eje)</label>
+    <div class="campo-fila-3" style="margin-bottom:0;">
+      <div><label>Amargor</label><input type="number" min="0" max="5" step="0.5" id="insumo-score-amargor" placeholder="0-5"></div>
+      <div><label>Dulzor</label><input type="number" min="0" max="5" step="0.5" id="insumo-score-dulzor" placeholder="0-5"></div>
+      <div><label>Cítrico</label><input type="number" min="0" max="5" step="0.5" id="insumo-score-citrico" placeholder="0-5"></div>
+    </div>
+    <div class="campo-fila" style="margin-top:0;">
+      <div><label>Aromático</label><input type="number" min="0" max="5" step="0.5" id="insumo-score-aromatico" placeholder="0-5"></div>
+      <div></div>
+    </div>
     <label>Notas</label>
     <textarea id="insumo-notas" placeholder="Proveedor, formato de compra, aclaraciones…"></textarea>
     <div class="modal-acciones">
@@ -908,6 +955,14 @@ function abrirConfigManual() {
   document.getElementById('app-view').style.display = 'none';
   document.getElementById('config-view').style.display = 'block';
   document.getElementById('input-script-url').value = SCRIPT_URL;
+  cambiarSubtabConfig('conexion');
+}
+
+function cambiarSubtabConfig(nombre) {
+  document.querySelectorAll('#config-view .subpanel').forEach(p => p.classList.remove('activo'));
+  document.querySelectorAll('#config-view .subtab-btn').forEach(b => b.classList.remove('activo'));
+  document.getElementById('config-subpanel-' + nombre).classList.add('activo');
+  document.querySelector('#config-view .subtab-btn[data-subtab="' + nombre + '"]').classList.add('activo');
 }
 
 function iniciarApp() {
@@ -1292,8 +1347,58 @@ function calcularBalanceBatch(items, insumoMap) {
     porcentajeVino: volumenTotalMl > 0 ? (volumenVinoMl / volumenTotalMl * 100) : null,
     azucarGL: volumenTotalMl > 0 ? (azucarTotalG / (volumenTotalMl / 1000)) : null,
     botanicosCount,
+    perfilSensorial: calcularPerfilSensorial(items, insumoMap, volumenTotalMl),
     insumosSinGrado: Array.from(insumosSinGrado)
   };
+}
+
+// Perfil sensorial: dosis normalizada por litro de batch × puntaje del insumo en cada eje, sumado.
+// dosis_i = cantidad_i (convertida a su unidad base) / volumen_total_en_litros
+// Total_eje = Σ (dosis_i × score_eje_i)  — se explica en detalle en Configuración > Instructivo de cálculos.
+function calcularPerfilSensorial(items, insumoMap, volumenTotalMl) {
+  const ejes = { amargor: 0, dulzor: 0, citrico: 0, aromatico: 0 };
+  if (!volumenTotalMl) return ejes;
+  const volumenTotalL = volumenTotalMl / 1000;
+  items.forEach(it => {
+    if (!it.InsumoID) return;
+    const insumo = insumoMap[it.InsumoID];
+    if (!insumo) return;
+    const cantidad = Number(it.Cantidad) || 0;
+    const dosis = (cantidad * factorUnidad(it.Unidad)) / volumenTotalL;
+    ejes.amargor += dosis * (Number(insumo.ScoreAmargor) || 0);
+    ejes.dulzor += dosis * (Number(insumo.ScoreDulzor) || 0);
+    ejes.citrico += dosis * (Number(insumo.ScoreCitrico) || 0);
+    ejes.aromatico += dosis * (Number(insumo.ScoreAromatico) || 0);
+  });
+  return ejes;
+}
+
+function renderRadarSensorial(perfil) {
+  const valores = [perfil.amargor, perfil.citrico, perfil.aromatico, perfil.dulzor];
+  const suma = valores.reduce((a, b) => a + b, 0);
+  if (!suma) return '<p class="subtexto">Cargá puntajes sensoriales (0-5) en tus insumos para ver el perfil de esta receta acá.</p>';
+  const escala = Math.max(...valores, 0.01) * 1.2;
+  const pt = (angDeg, val) => {
+    const ang = (angDeg - 90) * Math.PI / 180;
+    const r = 150 * Math.min(val / escala, 1);
+    return (200 + r * Math.cos(ang)) + ',' + (200 + r * Math.sin(ang));
+  };
+  const poligono = [pt(0, perfil.amargor), pt(90, perfil.citrico), pt(180, perfil.aromatico), pt(270, perfil.dulzor)].join(' ');
+  const anillo = f => [pt(0, escala * f), pt(90, escala * f), pt(180, escala * f), pt(270, escala * f)].join(' ');
+  return '<svg viewBox="0 0 400 400" style="width:100%; max-width:280px; display:block; margin:8px auto;">' +
+    '<g fill="none" stroke="var(--linea)" stroke-width="1">' +
+      [0.2, 0.4, 0.6, 0.8, 1].map(f => '<polygon points="' + anillo(f) + '"/>').join('') +
+      '<line x1="200" y1="200" x2="200" y2="50"/><line x1="200" y1="200" x2="350" y2="200"/>' +
+      '<line x1="200" y1="200" x2="200" y2="350"/><line x1="200" y1="200" x2="50" y2="200"/>' +
+    '</g>' +
+    '<polygon points="' + poligono + '" fill="var(--rojo)" fill-opacity="0.22" stroke="var(--rojo-claro)" stroke-width="2.5"/>' +
+    '<g fill="var(--hueso)" font-size="14" text-anchor="middle" font-family="Georgia, serif">' +
+      '<text x="200" y="34">Amargor ' + formatearNumero(perfil.amargor) + '</text>' +
+      '<text x="382" y="205">Cítrico ' + formatearNumero(perfil.citrico) + '</text>' +
+      '<text x="200" y="382">Aromático ' + formatearNumero(perfil.aromatico) + '</text>' +
+      '<text x="18" y="205">Dulzor ' + formatearNumero(perfil.dulzor) + '</text>' +
+    '</g>' +
+  '</svg>';
 }
 
 function clasificacionBx(gl) {
@@ -1333,6 +1438,10 @@ function renderBalanceBatch(items, insumoMap) {
     notasHtml += '<p class="subtexto" style="color:var(--rojo-claro); margin-top:8px;">⚠ Definí el grado alcohólico de ' + b.insumosSinGrado.map(escapeHtml).join(', ') + ' en Insumos para un cálculo exacto.</p>';
   }
   cont.innerHTML = html + notasHtml +
+    '<div style="margin-top:16px; border-top:1px solid var(--linea); padding-top:14px;">' +
+      '<div style="font-size:11px; letter-spacing:1px; text-transform:uppercase; color:var(--hueso-muted); margin-bottom:4px;">Perfil sensorial</div>' +
+      renderRadarSensorial(b.perfilSensorial) +
+    '</div>' +
     '<div style="text-align:right; margin-top:10px;"><button class="btn btn-sm" onclick="usarVolumenCalculado(' + Math.round(b.volumenTotalMl) + ')">Usar este volumen en la receta</button></div>';
 }
 
@@ -1394,6 +1503,7 @@ function autocompletarUnidadItem() {
   const clasInsumo = opt ? (opt.getAttribute('data-clasificacion') || '') : '';
   document.getElementById('item-unidad').value = unidadInsumo;
   document.getElementById('campo-item-concentracion-azucar').style.display = clasInsumo === 'Azúcar' ? 'block' : 'none';
+  renderFichaInsumoItem(opt ? opt.value : '');
   const dim = dimensionDe(unidadInsumo);
   const datalist = document.getElementById('item-unidad-datalist');
   const inputUnidad = document.getElementById('item-unidad');
@@ -1406,6 +1516,24 @@ function autocompletarUnidadItem() {
     inputUnidad.readOnly = true;
     inputUnidad.title = 'Esta es una unidad especial — debe coincidir exactamente con la del insumo.';
   }
+}
+
+function renderFichaInsumoItem(insumoId) {
+  const cont = document.getElementById('item-insumo-ficha');
+  const insumo = state.insumos.find(i => String(i.ID) === String(insumoId));
+  if (!insumo) { cont.style.display = 'none'; cont.innerHTML = ''; return; }
+  const scores = [
+    ['Amargor', insumo.ScoreAmargor], ['Dulzor', insumo.ScoreDulzor],
+    ['Cítrico', insumo.ScoreCitrico], ['Aromático', insumo.ScoreAromatico]
+  ];
+  const badges = scores.map(([label, val]) =>
+    '<span style="font-size:11px; border:1px solid var(--linea); color:var(--hueso-muted); padding:2px 9px; border-radius:20px; margin-right:5px;">' +
+    escapeHtml(label) + ' ' + (val !== undefined && val !== '' ? formatearNumero(val) : '—') + '</span>'
+  ).join('');
+  cont.innerHTML =
+    (insumo.DescripcionEfectos ? '<div style="color:var(--hueso-muted); margin-bottom:8px; line-height:1.5;">' + escapeHtml(insumo.DescripcionEfectos) + '</div>' : '') +
+    '<div>' + badges + '</div>';
+  cont.style.display = 'block';
 }
 
 function abrirModalItem(tipo) {
@@ -1696,6 +1824,10 @@ function abrirModalInsumo(id) {
   document.getElementById('insumo-precio').value = i ? i.PrecioPorUnidad : '';
   document.getElementById('insumo-stock-minimo').value = i ? (i.StockMinimo || '') : '';
   document.getElementById('insumo-descripcion').value = i ? i.DescripcionEfectos : '';
+  document.getElementById('insumo-score-amargor').value = i ? (i.ScoreAmargor || '') : '';
+  document.getElementById('insumo-score-dulzor').value = i ? (i.ScoreDulzor || '') : '';
+  document.getElementById('insumo-score-citrico').value = i ? (i.ScoreCitrico || '') : '';
+  document.getElementById('insumo-score-aromatico').value = i ? (i.ScoreAromatico || '') : '';
   document.getElementById('insumo-notas').value = i ? i.Notas : '';
   document.getElementById('btn-borrar-insumo').style.display = i ? 'inline-block' : 'none';
   document.getElementById('btn-compra-insumo').style.display = i ? 'inline-block' : 'none';
@@ -1718,6 +1850,10 @@ function guardarInsumo() {
     PrecioPorUnidad: document.getElementById('insumo-precio').value,
     StockMinimo: document.getElementById('insumo-stock-minimo').value,
     DescripcionEfectos: document.getElementById('insumo-descripcion').value,
+    ScoreAmargor: document.getElementById('insumo-score-amargor').value,
+    ScoreDulzor: document.getElementById('insumo-score-dulzor').value,
+    ScoreCitrico: document.getElementById('insumo-score-citrico').value,
+    ScoreAromatico: document.getElementById('insumo-score-aromatico').value,
     Notas: document.getElementById('insumo-notas').value
   };
   if (!data.Nombre) { mostrarToast('Ponele un nombre al insumo.', true); return; }

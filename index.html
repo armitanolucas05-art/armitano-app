@@ -360,7 +360,7 @@ td.num.error{color:var(--rojo-claro);}
       <p class="subtexto">Cuenta simple: cantidad de renglones de la receta cuyo insumo está clasificado como Botánico.</p>
 
       <h3 style="color:var(--dorado-brillante); font-size:16px; margin:18px 0 4px;">Perfil sensorial (radar de 4 ejes)</h3>
-      <p class="subtexto">Cada insumo tiene 4 puntajes fijos (0 a 5, cargados en Insumos): Amargor, Dulzor, Cítrico, Aromático. Por cada renglón de la receta: dosis = cantidad ÷ volumen total del batch en litros. Total de cada eje = Σ (dosis × puntaje del insumo en ese eje), sumando todos los insumos de la receta. El gráfico se autoescala a los valores actuales — no es una escala fija de 0 a 5, es una comparación de forma entre ejes.</p>
+      <p class="subtexto">Cada insumo tiene 4 puntajes fijos (0 a 5, cargados en Insumos): Amargor, Dulzor, Cítrico, Aromático. Por cada renglón de la receta: dosis = cantidad ÷ volumen total del batch en litros. Como algunos insumos se dosifican en decenas de g/L (azúcar) y otros en unos pocos g/L (botánicos), se usa la raíz cuadrada de la dosis antes de multiplicar — si no, el azúcar aplastaría matemáticamente a los botánicos solo por la diferencia de escala, no por ser realmente más determinante. Total de cada eje = Σ (√dosis × puntaje del insumo en ese eje), sumando todos los insumos de la receta. El gráfico se autoescala a los valores actuales — no es una escala fija de 0 a 5, es una comparación de forma entre ejes, no un número absoluto.</p>
 
       <h3 style="color:var(--dorado-brillante); font-size:16px; margin:18px 0 4px;">Centro de costos</h3>
       <p class="subtexto">Por cada insumo de la receta: cantidad convertida a la unidad del insumo (g↔kg, ml↔L se convierten solos; unidades especiales deben coincidir exactamente) × precio por unidad. Costo por litro/copa (100ml)/botella (750ml) = costo total del batch ÷ volumen del batch (el que cargaste a mano en la receta, no el calculado) × la medida correspondiente.</p>
@@ -1373,6 +1373,10 @@ function calcularBalanceBatch(items, insumoMap) {
 // Perfil sensorial: dosis normalizada por litro de batch × puntaje del insumo en cada eje, sumado.
 // dosis_i = cantidad_i (convertida a su unidad base) / volumen_total_en_litros
 // Total_eje = Σ (dosis_i × score_eje_i)  — se explica en detalle en Configuración > Instructivo de cálculos.
+// Se usa raíz cuadrada de la dosis (no la dosis cruda) para que insumos de dosis alta
+// (azúcar, decenas de g/L) no aplasten matemáticamente a los botánicos (dosis baja, unos
+// pocos g/L) solo por la diferencia de escala — el orden relativo se mantiene, pero se
+// comprime la diferencia. Se explica en Configuración > Instructivo de cálculos.
 function calcularPerfilSensorial(items, insumoMap, volumenTotalMl) {
   const ejes = { amargor: 0, dulzor: 0, citrico: 0, aromatico: 0 };
   if (!volumenTotalMl) return ejes;
@@ -1383,10 +1387,11 @@ function calcularPerfilSensorial(items, insumoMap, volumenTotalMl) {
     if (!insumo) return;
     const cantidad = Number(it.Cantidad) || 0;
     const dosis = (cantidad * factorUnidad(it.Unidad)) / volumenTotalL;
-    ejes.amargor += dosis * (Number(insumo.ScoreAmargor) || 0);
-    ejes.dulzor += dosis * (Number(insumo.ScoreDulzor) || 0);
-    ejes.citrico += dosis * (Number(insumo.ScoreCitrico) || 0);
-    ejes.aromatico += dosis * (Number(insumo.ScoreAromatico) || 0);
+    const dosisComprimida = Math.sqrt(dosis);
+    ejes.amargor += dosisComprimida * (Number(insumo.ScoreAmargor) || 0);
+    ejes.dulzor += dosisComprimida * (Number(insumo.ScoreDulzor) || 0);
+    ejes.citrico += dosisComprimida * (Number(insumo.ScoreCitrico) || 0);
+    ejes.aromatico += dosisComprimida * (Number(insumo.ScoreAromatico) || 0);
   });
   return ejes;
 }
@@ -1403,18 +1408,18 @@ function renderRadarSensorial(perfil) {
   };
   const poligono = [pt(0, perfil.amargor), pt(90, perfil.citrico), pt(180, perfil.aromatico), pt(270, perfil.dulzor)].join(' ');
   const anillo = f => [pt(0, escala * f), pt(90, escala * f), pt(180, escala * f), pt(270, escala * f)].join(' ');
-  return '<svg viewBox="0 0 400 400" style="width:100%; max-width:280px; display:block; margin:8px auto;">' +
+  return '<svg viewBox="-100 -20 600 440" style="width:100%; max-width:280px; display:block; margin:8px auto;">' +
     '<g fill="none" stroke="var(--linea)" stroke-width="1">' +
       [0.2, 0.4, 0.6, 0.8, 1].map(f => '<polygon points="' + anillo(f) + '"/>').join('') +
       '<line x1="200" y1="200" x2="200" y2="50"/><line x1="200" y1="200" x2="350" y2="200"/>' +
       '<line x1="200" y1="200" x2="200" y2="350"/><line x1="200" y1="200" x2="50" y2="200"/>' +
     '</g>' +
     '<polygon points="' + poligono + '" fill="var(--rojo)" fill-opacity="0.22" stroke="var(--rojo-claro)" stroke-width="2.5"/>' +
-    '<g fill="var(--hueso)" font-size="14" text-anchor="middle" font-family="Georgia, serif">' +
-      '<text x="200" y="34">Amargor ' + formatearNumero(perfil.amargor) + '</text>' +
-      '<text x="382" y="205">Cítrico ' + formatearNumero(perfil.citrico) + '</text>' +
-      '<text x="200" y="382">Aromático ' + formatearNumero(perfil.aromatico) + '</text>' +
-      '<text x="18" y="205">Dulzor ' + formatearNumero(perfil.dulzor) + '</text>' +
+    '<g fill="var(--hueso)" font-size="14" font-family="Georgia, serif">' +
+      '<text x="200" y="30" text-anchor="middle">Amargor ' + formatearNumero(perfil.amargor) + '</text>' +
+      '<text x="360" y="205" text-anchor="start">Cítrico ' + formatearNumero(perfil.citrico) + '</text>' +
+      '<text x="200" y="390" text-anchor="middle">Aromático ' + formatearNumero(perfil.aromatico) + '</text>' +
+      '<text x="40" y="205" text-anchor="end">Dulzor ' + formatearNumero(perfil.dulzor) + '</text>' +
     '</g>' +
   '</svg>';
 }

@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>ARMITANO · Gestión</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=EB+Garamond:ital,wght@0,400;0,600;1,400&display=swap');
@@ -143,11 +143,13 @@ button{font-family:'EB Garamond', serif;}
   border-top:1px solid var(--linea);
 }
 .proximo-paso.ok{color:var(--ok);}
+.proximo-paso.faltan-datos{color:var(--rojo-claro); cursor:help;}
 .proximo-paso-detalle{
   background:var(--panel-2); border:1px solid var(--linea); border-radius:var(--radius);
   padding:12px 14px; font-size:14px;
 }
 .proximo-paso-detalle.ok{border-color:var(--ok); color:var(--ok);}
+.proximo-paso-detalle.faltan-datos{border-color:var(--rojo-claro); color:var(--rojo-claro);}
 .tiempos-reales{
   background:var(--panel-2); border:1px solid var(--linea); border-radius:var(--radius);
   padding:12px 14px; display:flex; gap:22px; flex-wrap:wrap;
@@ -1035,7 +1037,9 @@ function onCambioEstadoReceta() {
 
 function calcularProximoPaso(r) {
   if (!r.Estado || r.Estado === 'Teórica') return null;
-  if (!r.FechaInicioMaceracion) return null;
+  if (!r.FechaInicioMaceracion) {
+    return { paso: 'faltan_datos', texto: 'Falta la fecha de inicio de maceración (se completa sola al pasar a "En maceración", o cargala a mano en "Editar datos generales").' };
+  }
   const inicio = new Date(r.FechaInicioMaceracion + 'T00:00:00');
   if (isNaN(inicio.getTime())) return null;
   const extractoDias = Number(r.TiempoMaceracionExtractoDias) || 0;
@@ -1044,7 +1048,9 @@ function calcularProximoPaso(r) {
 
   // Etapa 1: filtrar el extracto botánico — no avanza sola, espera confirmación manual
   if (!r.FechaFinExtracto) {
-    if (!extractoDias) return null;
+    if (!extractoDias) {
+      return { paso: 'faltan_datos', texto: 'Falta cargar "Maceración extracto botánico (días)" en Editar datos generales para calcular este paso.' };
+    }
     const fechaEstim = new Date(inicio); fechaEstim.setDate(fechaEstim.getDate() + extractoDias);
     const diasRestantes = Math.round((fechaEstim - hoy) / 86400000);
     return { paso: 'extracto', texto: 'Filtrar extracto botánico', fecha: fechaEstim, diasRestantes: diasRestantes };
@@ -1053,7 +1059,9 @@ function calcularProximoPaso(r) {
   // Etapa 2: fin del reposo — arranca a contar recién desde que se confirmó la etapa 1
   const finExtracto = new Date(r.FechaFinExtracto + 'T00:00:00');
   if (!r.FechaFinReposo) {
-    if (!reposoDias) return null;
+    if (!reposoDias) {
+      return { paso: 'faltan_datos', texto: 'Falta cargar "Reposo tras mezcla (días)" en Editar datos generales para calcular este paso.' };
+    }
     const fechaEstim = new Date(finExtracto); fechaEstim.setDate(fechaEstim.getDate() + reposoDias);
     const diasRestantes = Math.round((fechaEstim - hoy) / 86400000);
     return { paso: 'reposo', texto: 'Fin del reposo', fecha: fechaEstim, diasRestantes: diasRestantes };
@@ -1083,6 +1091,8 @@ function renderRecetas() {
     let lineaProximo = '';
     if (proximo && proximo.paso === 'lista') {
       lineaProximo = '<div class="proximo-paso ok">✓ Lista para evaluar — ' + proximo.diasRealesTotal + ' días reales</div>';
+    } else if (proximo && proximo.paso === 'faltan_datos') {
+      lineaProximo = '<div class="proximo-paso faltan-datos" title="' + escapeHtml(proximo.texto) + '">⚠ Faltan datos para calcular el próximo paso</div>';
     } else if (proximo && proximo.paso === 'reposo') {
       const t = calcularTiemposReales(r);
       lineaProximo = '<div class="proximo-paso">→ ' + escapeHtml(proximo.texto) + ' — ' + formatDiasRestantes(proximo.diasRestantes) +
@@ -1219,6 +1229,14 @@ function renderDetalleProximoPaso(r) {
   if (!p) { cont.innerHTML = ''; return; }
   if (p.paso === 'lista') {
     cont.innerHTML = '<div class="proximo-paso-detalle ok">✓ Lista para evaluar desde ' + p.fecha.toLocaleDateString('es-AR') + ' — ' + p.diasRealesTotal + ' días reales de maceración total.</div>';
+    return;
+  }
+  if (p.paso === 'faltan_datos') {
+    cont.innerHTML =
+      '<div class="proximo-paso-detalle faltan-datos">' +
+        '<div>⚠ ' + escapeHtml(p.texto) + '</div>' +
+        '<div style="margin-top:10px;"><button class="btn btn-sm" onclick="editarRecetaActual()">Completar datos generales</button></div>' +
+      '</div>';
     return;
   }
   cont.innerHTML =
